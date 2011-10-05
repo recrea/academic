@@ -1,0 +1,144 @@
+/** Scaffold View **/
+dl {
+	line-height: 2em;
+	margin: 0em 0em;
+	width: 70%;
+}
+dl .altrow {
+	background: #f4f4f4;
+}
+dt {
+	font-weight: bold;
+	padding-left: 4px;
+	vertical-align: top;
+}
+dd {
+	margin-left: 17em;
+	margin-top: -2em;
+	vertical-align: top;
+}
+
+/** Forms **/
+form {
+	clear: both;
+	margin-right: 20px;
+	padding: 0;
+	width: 95%;
+}
+fieldset {
+	border: 1px solid #ccc;
+	margin-bottom: 1em;
+	padding: 16px 20px;
+}
+fieldset legend {
+	background:#fff;
+	color: #BD4C60;
+	font-size: 160%;
+	font-weight: bold;
+}
+fieldset fieldset {
+	margin-top: 0px;
+	margin-bottom: 20px;
+	padding: 16px 10px;
+}
+fieldset fieldset legend {
+	font-size: 120%;
+	font-weight: normal;
+}
+fieldset fieldset div {
+	clear: left;
+	margin: 0 20px;
+}
+form div {
+	clear: both;
+	margin-bottom: 1em;
+	padding: .5em;
+	vertical-align: text-top;
+}
+form .input {
+	color: #444;
+}
+form .required {
+	font-weight: bold;
+}
+form .required label:after {
+	color: #e32;
+	content: '*';
+	display:inline;
+}
+form div.submit {
+	border: 0;
+	clear: both;
+	margin-top: 10px;
+}
+label {
+	display: block;
+	font-size: 110%;
+	margin-bottom:3px;
+}
+input, textarea {
+	clear: both;
+	font-size: 110%;
+	font-family: "frutiger linotype", "lucida grande", "verdana", sans-serif;
+	padding: 1%;
+	width:85%;
+}
+select {
+	clear: both;
+	font-size: 110%;
+	vertical-align: text-bottom;
+}
+select[multiple=multiple] {
+	width: 100%;
+}
+option {
+	font-size: 110%;
+	padding: 0 3px;
+}
+input[type=checkbox] {
+	clear: left;
+	float: left;
+	margin: 0px 6px 7px 2px;
+	width: auto;
+}
+div.checkbox label {
+	display: inline;
+}
+input[type=radio] {
+	float:left;
+	width:auto;
+	margin: 0 3px 7px 0;
+}
+div.radio label {
+	margin: 0 0 6px 20px;
+}
+input[type=submit] {
+	display: inline;
+	font-size: 110%;
+	width: auto;
+}
+form .submit input[type=submit] {
+	background:#8a0324;
+	background: -webkit-gradient(linear, left top, left bottom, from(#8a0e24), to(#bd4c60));
+	background-image: -moz-linear-gradient(top, #8a0e24, #bd4c60);
+	color: #fff;
+	text-shadow: #8cee7c 0px 1px 0px;
+}
+form .submit input[type=submit]:hover {
+	background:#bd4c60;
+	background: -webkit-gradient(linear, left top, left bottom, from(#8a0e24), to(#bd4c60));
+	background-image: -moz-linear-gradient(top, #8a0e24, #bd4c60);
+}
+
+.student_autocomplete {
+	padding:0;
+}
+
+.disabled { background-color:#ccc;}
+
+.search dl {
+	width:80%;
+}
+.search dd {
+	margin-left:13em;
+}
