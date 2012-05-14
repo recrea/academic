@@ -20,29 +20,32 @@ class MassiveAttendanceRegistersController extends AppController {
 	  
 	  if ((isset($this->params['form']['registers'])) && ($this->_valid()))
 	  {
-      $ids = implode(array_keys($this->params['form']['registers']), ",");
-      $this->MassiveAttendanceRegister->query("DELETE FROM attendance_registers WHERE id IN ($ids)");
-    
-	    $query = "INSERT INTO attendance_registers(event_id, initial_hour, final_hour, duration, teacher_id, teacher_2_id, activity_id, group_id) VALUES ";
-	    $values = array();
-	    foreach($this->params['form']['registers'] as $id => $register):
-	      $initial_hour = new DateTime($register['initial_date']." ".$register['initial_hour']);
+      
+	    foreach($this->params['form']['registers'] as $id => $data):
+	      
+	      $initial_hour = new DateTime($data['initial_date']." ".$data['initial_hour']);
 	      $final_hour = $initial_hour;
-	      $this->_add_days($final_hour, 0, $register['duration'] * 60);
+	      $this->_add_days($final_hour, 0, $data['duration'] * 60);
       
 	      $initial_hour = $initial_hour->format('Y-m-d H:i:s');
 	      $final_hour = $final_hour->format('Y-m-d H:i:s');
         
-        if ($register['teacher_2_id'] == '') 
+        if ($data['teacher_2_id'] == '') 
           $teacher_2_id = "NULL";
         else
-          $teacher_2_id = $register['teacher_2_id'];
-        
-	      array_push($values, "({$register['event_id']}, '{$initial_hour}', '{$final_hour}', {$register['duration']}, {$register['teacher_id']}, {$teacher_2_id}, {$register['activity_id']}, {$register['group_id']})");
+          $teacher_2_id = $data['teacher_2_id'];
+                
+        $this->MassiveAttendanceRegister->query("UPDATE attendance_registers SET"
+          . " teacher_id = {$data['teacher_id']},"
+          . " teacher_2_id = {$teacher_2_id},"
+          . " event_id = {$data['event_id']},"
+          . " initial_hour = '{$initial_hour}',"
+          . " final_hour = '{$final_hour}',"
+          . " duration = {$data['duration']},"
+          . " activity_id = {$data['activity_id']},"
+          . " `group_id` = {$data['group_id']}"
+          . " WHERE id = {$id}");
 	    endforeach;
-    
-	    $query .= implode($values, ",");
-	    $this->MassiveAttendanceRegister->query($query);
 	    
 	    $this->Session->setFlash('El registro masivo se ha creado con éxito.');
 	    $this->redirect(array('action' => 'add', $this->params['form']['course_id']));

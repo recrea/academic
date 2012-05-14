@@ -413,6 +413,7 @@ class DboMysqlBase extends DboSource {
 			$fields = implode(', ', array_map(array(&$this, 'name'), $fields));
 		}
 		$values = implode(', ', $values);
+		debug("INSERT INTO {$table} ({$fields}) VALUES {$values}");
 		$this->query("INSERT INTO {$table} ({$fields}) VALUES {$values}");
 	}
 /**

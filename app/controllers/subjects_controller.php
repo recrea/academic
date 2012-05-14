@@ -30,7 +30,7 @@ class SubjectsController extends AppController {
 		$subject = $this->Subject->read();
 		
 		$activities = $this->Subject->Activity->query("SELECT Activity.*, SUM(Event.duration) / `Group`.total AS duration, IFNULL(Registration.total / `Group`.total, 0) as students FROM activities Activity LEFT JOIN events Event ON Event.activity_id = Activity.id LEFT JOIN (SELECT `groups`.subject_id, `groups`.type, count(id) as total FROM `groups` where `groups`.name NOT LIKE '%no me presento%' GROUP BY `groups`.subject_id, `groups`.type) `Group` ON `Group`.subject_id = Activity.subject_id AND `Group`.type = Activity.type LEFT JOIN (SELECT registrations.activity_id, count(registrations.student_id) as total FROM registrations WHERE registrations.group_id <> -1 GROUP BY registrations.activity_id) Registration ON Registration.activity_id = Activity.id WHERE Activity.subject_id = {$id} GROUP BY Activity.type ASC, Activity.name ASC");
-				
+
 		$this->set('students_registered_on_subject', $this->Subject->query("SELECT count(*) AS total FROM subjects_users WHERE subjects_users.subject_id = {$id}"));
 		
 		$this->set('subject', $subject);

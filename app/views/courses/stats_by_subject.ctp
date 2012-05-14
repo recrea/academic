@@ -29,7 +29,7 @@
 			<tbody>
 				<?php foreach ($subjects as $subject): ?>
 					<tr>
-					  <td><?php echo $subject['subjects']['code'] ?></td>
+					  <td><?php echo $html->link($subject['subjects']['code'], array('controller' => 'subjects', 'action' => 'view', $subject['subjects']['id'])) ?></td>
 					  <td><?php echo $subject['subjects']['name']?></td>
 					  <td><?php echo $subject[0]['students']?></td>
 					  <td><?php echo round($subject[0]['expected_hours'], 2) ?></td>
