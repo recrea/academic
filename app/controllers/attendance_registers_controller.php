@@ -255,7 +255,6 @@
 		
 		function _authorize(){
 			parent::_authorize();
-			
 			$private_actions = array("index", "add", "edit", "get_register_info");
 			
 			if (($this->Auth->user('type') != "Profesor") && ($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Administrativo") && ($this->Auth->user('type') != "Becario"))
@@ -266,6 +265,29 @@
 				
 			$this->set('section', 'attendance_registers');
 			return true;
+		}
+
+		/**
+		 * Deletes an attendance register
+		 *
+		 * @param integer $id ID of an attendance register
+		 * @return void
+		 * @since 2012-05-17
+		 */
+		function delete($id) {
+			$this->AttendanceRegister->id = $id;
+			if (!$this->AttendanceRegister->exists()) {
+				$this->Session->setFlash('El registro de asistencia que intentas eliminar no existe.');
+				$this->redirect(array('action' => 'index'));
+			}
+
+			if ($this->AttendanceRegister->delete($id, true)) {
+				$this->Session->setFlash('El registro se eliminó correctamente.');
+				$this->redirect(array('action' => 'index'));
+			}
+
+			$this->Session->setFlash('El registro de asistencia no se pudo eliminar. Si el error continúa contacta con el administrador.');
+			$this->redirect($this->referer());
 		}
 	}
 ?>

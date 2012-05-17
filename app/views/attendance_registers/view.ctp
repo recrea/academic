@@ -8,6 +8,7 @@
 <div class="actions">
 	<ul>
 		<li><?php echo $html->link('Modificar registro', array('action' => 'edit', $ar['AttendanceRegister']['id'])) ?></li>
+		<li><?php echo $html->link('Eliminar registro', array('action' => 'delete', $ar['AttendanceRegister']['id'])) ?></li>
 	</ul>
 </div>
 <div class="view">
