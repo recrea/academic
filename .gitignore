@@ -1,1 +1,4 @@
 /app/tmp
+/app/config/database.php
+/app/config/core.php
+/app/config/db.sql

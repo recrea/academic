@@ -48,3 +48,10 @@
  * Inflector::rules('plural', array('rules' => array(), 'irregular' => array(), 'uninflected' => array()));
  *
  */
+
+/**
+ * Define global path to prepend in URL
+ *
+ * @since 2012-05-17
+ */
+define('PATH', "/academic");
