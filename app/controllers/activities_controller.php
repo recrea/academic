@@ -2,7 +2,7 @@
 	class ActivitiesController extends AppController {
 		var $name = 'Activities';
 		var $paginate = array('limit' => 10, 'order' => array('activity.initial_date' => 'asc'));
-		var $helpers = array('html', 'javascript', 'dateHelper', 'Ajax');
+		var $helpers = array('Ajax');
 	
 		function add($subject_id = null){
 			if (!empty($this->data)){

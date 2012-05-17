@@ -2,7 +2,7 @@
 	class GroupsController extends AppController {
 		var $name = 'Groups';
 		var $paginate = array('limit' => 10, 'order' => array('group.initial_date' => 'asc'));
-		var $helpers = array('html', 'javascript', 'dateHelper', 'Ajax');
+		var $helpers = array('Ajax');
 	
 		function add($subject_id = null){
 			if (!empty($this->data)){

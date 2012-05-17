@@ -1,7 +1,7 @@
 <?php
 class RegistrationsController extends AppController {
 	var $name = 'Registrations';
-	var $helpers = array('html', 'javascript', 'Ajax');
+	var $helpers = array('Ajax');
 	
 	function add($activity_id, $group_id){
 		

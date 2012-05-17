@@ -2,7 +2,7 @@
 	class AttendanceRegistersController extends AppController {
 		var $name = 'AttendanceRegisters';
 		var $paginate = array('limit' => 10, 'order' => array('AttendanceRegister.initial_hour' => 'desc'));
-		var $helpers = array('html', 'javascript', 'dateHelper', 'Ajax', 'Barcode');
+		var $helpers = array('Ajax', 'Barcode');
 		
 		function index($teacher_id = -1, $activity_id = -1, $date = -1) {
 			if (!empty($this->data)){

@@ -2,7 +2,7 @@
 	class EventsController extends AppController {
 		var $name = 'Events';
 		var $paginate = array('limit' => 10, 'order' => array('activity.initial_date' => 'asc'));
-		var $helpers = array('html', 'javascript', 'dateHelper', 'Ajax', 'activityHelper');
+		var $helpers = array('Ajax', 'activityHelper');
 		
 		function schedule($course_id) {
 			

@@ -2,7 +2,6 @@
 class CoursesController extends AppController {
 	var $name = 'Courses';
 	var $paginate = array('limit' => 10, 'order' => array('Course.initial_date' => 'asc'));
-	var $helpers = array('html', 'javascript', 'dateHelper');
 	
 	function index() {
 		$this->set('courses', $this->Course->find('all'));

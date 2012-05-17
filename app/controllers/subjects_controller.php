@@ -2,7 +2,6 @@
 class SubjectsController extends AppController {
 	var $name = 'Subjects';
 	var $paginate = array('limit' => 10, 'order' => array('Subject.code' => 'asc'));
-	var $helpers = array('html', 'javascript');
 	
 	function add($course_id = null){
 		if (!empty($this->data)){

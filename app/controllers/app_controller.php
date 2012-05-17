@@ -1,7 +1,17 @@
 <?php
 class AppController extends Controller {
-    var $components = array('Session', 'Auth', 'RequestHandler', 'Email');
-    
+	/**
+	 * Application wide controllers
+	 */
+	var $components = array('Session', 'Auth', 'RequestHandler', 'Email');
+
+	/**
+	 * Application wide helpers
+	 *
+	 * @since 2012-05-17
+	 */
+	var $helpers = array('Html', 'Form', 'Session', 'Javascript', 'DateHelper');
+
 	function beforeFilter() {
         //Configure AuthComponent
         $this->Auth->loginAction = array('controller' => 'users', 'action' => 'login');

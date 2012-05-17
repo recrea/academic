@@ -2,7 +2,6 @@
 class ClassroomsController extends AppController {
 	var $name = 'Classrooms';
 	var $paginate = array('limit' => 10, 'order' => array('Classroom.name' => 'asc'));
-	var $helpers = array('html', 'javascript', 'dateHelper');
 	
 	function index(){
 		App::import('Sanitize');

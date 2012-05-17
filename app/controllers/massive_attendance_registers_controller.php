@@ -1,7 +1,7 @@
 <?php      
 class MassiveAttendanceRegistersController extends AppController {
 	var $name = 'MassiveAttendanceRegisters';
-	var $helpers = array('html', 'javascript', 'Ajax');
+	var $helpers = array('Ajax');
 	
 	function add($course_id = null){
 	  if ($course_id == null)
