@@ -281,8 +281,9 @@
 				$this->redirect(array('action' => 'index'));
 			}
 
+			$this->AttendanceRegister->query("DELETE FROM users_attendance_register WHERE attendance_register_id = $id");
 			if ($this->AttendanceRegister->delete($id, true)) {
-				$this->Session->setFlash('El registro se eliminó correctamente.');
+				$this->Session->setFlash('El registro de asistencia se eliminó correctamente.');
 				$this->redirect(array('action' => 'index'));
 			}
 
