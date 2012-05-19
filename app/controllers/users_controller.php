@@ -96,13 +96,24 @@ class UsersController extends AppController {
 		$this->set('users', $users);
 	}
 	
-	function find_students_by_name(){
+	/**
+	 * Find students by name
+	 */
+	function find_students_by_name() {
 		App::import('Sanitize');
-		$q = '%'.Sanitize::escape($this->params['url']['q']).'%';
-		$users = $this->User->find('all', array('conditions' => array('User.type' => 'Estudiante', "OR" => array('User.first_name LIKE' => $q, 'User.last_name LIKE' => $q))));
+		$q = '%'.utf8_decode(Sanitize::escape($this->params['url']['q'])).'%';
+		$users = $this->User->find('all', array(
+			'conditions' => array(
+				'User.type' => 'Estudiante',
+				"OR" => array(
+					'User.first_name LIKE' => $q,
+					'User.last_name LIKE' => $q,
+				),
+			),
+		));
 		$this->set('users', $users);
 	}
-	
+
 	function editProfile() {
 		$this->User->id = $this->Auth->user('id');
 		if (empty($this->data)) {
