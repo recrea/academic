@@ -24,7 +24,7 @@ class Course extends AcademicModel {
 					'message' => 'La fecha de inicio no puede estar vacía y debe tener la forma día/mes/año (p.ej 01/01/2010)'
 				), 
 				'course_overlap' => array(
-					'rule' => array('courseOverlap'), 
+					'rule' => array('courseOverlap'),
 					'message' => 'Existe un curso que coincide con las fechas seleccionadas'
 				)
 			), 
@@ -44,16 +44,40 @@ class Course extends AcademicModel {
 	function courseOverlap($initial_date) {
 		$initial_date = $this->data[$this->alias]['initial_date'];
 		$final_date = $this->data[$this->alias]['final_date'];
-		$query = "SELECT * FROM courses WHERE ((initial_date <= '{$initial_date}' AND final_date >= '{$initial_date}') OR (initial_date <= '{$final_date}' AND final_date >= '{$final_date}') OR (initial_date >= '{$initial_date}' AND final_date <= '{$final_date}'))";
-		
+		$query = "
+			SELECT *
+			FROM courses
+			WHERE (
+				(initial_date <= '{$initial_date}' AND final_date >= '{$initial_date}')
+				OR (initial_date <= '{$final_date}' AND final_date >= '{$final_date}')
+				OR (initial_date >= '{$initial_date}' AND final_date <= '{$final_date}')
+			)
+			";
+
 		if (isset($this->data[$this->alias]['id']))
 			$query .= " AND id <> {$this->data[$this->alias]['id']}";
-			
+
 		$overlaped_courses = $this->query($query);
-		
+
 		return count($overlaped_courses) == 0;
 	}
-	
+
+	/**
+	 * Returns the latest final date of all courses
+	 *
+	 * @return string Latest final date
+	 * @since 2012-05-19
+	 */
+	function latestFinalDate() {
+		$course = $this->query(sprintf("SELECT MAX(%s.final_date) AS max_final_date FROM %s AS %s", $this->alias, $this->useTable, $this->alias));
+
+		if ($course) {
+			return $course[0][0]['max_final_date'];
+		} else {
+			return date('Y-m-d');
+		}
+	}
+
 	function ltInitialDate($final_date) {
 		$initial_date = $this->data[$this->alias]['initial_date'];
 		return $final_date > $initial_date;
@@ -66,7 +90,7 @@ class Course extends AcademicModel {
 		}
 		return $results;
 	}
-	
+
 	function beforeValidate(){
 		if (!empty($this->data['Course']['initial_date']))
 			$this->data['Course']['initial_date'] = $this->dateFormatInternal($this->data['Course']['initial_date']);

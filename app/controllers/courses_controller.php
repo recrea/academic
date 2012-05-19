@@ -35,69 +35,84 @@ class CoursesController extends AppController {
 				$this->set('course', $this->data);
 		}
 	}
-	
+
+	/**
+	 * Duplicates a course and all of its subjects
+	 *
+	 * @param integer $id ID of a course
+	 * @return void
+	 * @since 2012-05-19
+	 */
 	function copy($id) {
-	  $course = $this->Course->find(array('id' => $id));
-	  $this->Course->id = null;
-	  $subjects_ids = array();
-	  $new_course = array("Course" => array());
-	  
-    list($day,$month,$year) = split("-", $course["Course"]["initial_date"]);
-    $new_course["Course"]["initial_date"] = "01-01-1900";
+		$course = $this->Course->findById($id);
 
-    list($day,$month,$year) = split("-", $course["Course"]["final_date"]);
-    $new_course["Course"]["final_date"] = "31-01-1900";
+		// Creates the new course
+		$newCourse = array('Course' => array());
+		$newCourse["Course"]["name"] = sprintf('%s (COPIA)', $course["Course"]["name"]);
+		$newCourse["Course"]["created_at"] = date('Y-m-d H:i:s');
+		$latestFinalDate = $this->Course->latestFinalDate();
+		$newCourse["Course"]["initial_date"] = date('Y-m-d', strtotime($latestFinalDate) + 86400);
+		$newCourse["Course"]["final_date"] = date('Y-m-d', strtotime($latestFinalDate) + 31536000);
 
-	  $new_course["Course"]["name"] = $course["Course"]["name"]." (COPIA)";
-	  
-	  $this->Course->save($new_course);
+		$this->Course->create();
+		if (!$this->Course->save($newCourse)) {
+			$this->Session->setFlash('El curso no se pudo copiar.');
+			$this->redirect($this->referer());
+		}
 
-	  foreach($course["Subject"] as $subject):
-	    $this->Course->Subject->id = null;
-	    $new_subject = array();
-	    $new_subject["course_id"] = $this->Course->id;
-	    $new_subject["code"] = $subject["code"];
-	    $new_subject["level"] = $subject["level"];
-	    $new_subject["type"] = $subject["type"];
-	    $new_subject["name"] = $subject["name"];
-	    $new_subject["acronym"] = $subject["acronym"];
-	    $new_subject["semester"] = $subject["semester"];
-	    $new_subject["credits_number"] = $subject["credits_number"];
-	    $new_subject["coordinator_id"] = $subject["coordinator_id"];
-	    $new_subject["practice_responsible_id"] = $subject["practice_responsible_id"];
-	    $this->Course->Subject->save($new_subject);
-	    
-	    $groups = $this->Course->Subject->Group->find('all', array("conditions" => array("Group.subject_id =" => $subject["id"])));
-	    foreach($groups as $group):
-	      $this->Course->Subject->Group->id = null;
-	      $new_group = array();
-	      $new_group["subject_id"] = $this->Course->Subject->id;
-	      $new_group["name"] = $group["Group"]["name"];
-	      $new_group["type"] = $group["Group"]["type"];
-	      $new_group["capacity"] = $group["Group"]["capacity"];
-	      $new_group["notes"] = $group["Group"]["notes"];
-        
-        $this->Course->Subject->Group->save($new_group);
-	    endforeach;
-	    
-	    $activities = $this->Course->Subject->Activity->find('all', array("conditions" => array("Activity.subject_id =" => $subject["id"])));
-	    
-	    foreach($activities as $activity):
-	      $this->Course->Subject->Activity->id = null;
-	      $new_activity = array();
-	      $new_activity["subject_id"] = $this->Course->Subject->id;
-	      $new_activity["type"] = $activity["Activity"]["type"];
-	      $new_activity["name"] = $activity["Activity"]["name"];
-	      $new_activity["notes"] = $activity["Activity"]["notes"];
-	      $new_activity["duration"] = $activity["Activity"]["duration"];
-	      
-	      $this->Course->Subject->Activity->save($new_activity);
-	    endforeach;
-	  endforeach;
-	  
-	  $this->Session->setFlash('El curso se ha copiado correctamente.');
-	  $this->redirect(array('action' => 'index'));
+		// Duplicates every subject
+		$savedSubjects = array();
+		$error = false;
+		foreach ($course['Subject'] as $subject) {
+			$subject['course_id'] = $this->Course->id;
+			$newSubject['Subject'] = $subject;
+			unset($newSubject['Subject']['id']);
+
+			$this->Course->Subject->create();
+			if ($this->Course->Subject->save($newSubject)) {
+				$savedSubjects[] = $this->Course->Subject->id;
+			} else {
+				$error = true;
+				break;
+			}
+
+			// Duplicate all groups of this subject
+			foreach ($this->Course->Subject->Group->findAllBySubjectId($subject['id'], array('Group.*')) as $group) {
+				unset($group['Group']['id']);
+				$group['Group']['subject_id'] = $this->Course->Subject->id;
+
+				if (!$this->Course->Subject->Group->save($group)) {
+					$error = true;
+					break(2);
+				}
+			}
+
+			// Duplicate all activities of this subject
+			foreach ($this->Course->Subject->Activity->findAllBySubjectId($subject['id'], array('Activity.*')) as $activity) {
+				unset($activity['Activity']['id']);
+				$activity['Activity']['subject_id'] = $this->Course->Subject->id;
+
+				if (!$this->Course->Subject->Activity->save($activity)) {
+					$error = true;
+					break(2);
+				}
+			}
+		}
+
+		if ($error) {
+			$subjectIds = implode(',', $savedSubjects);
+			$this->Course->query("DELETE FROM activities WHERE activities.subject_id IN ($subjectIds)");
+			$this->Course->query("DELETE FROM groups WHERE groups.subject_id IN ($subjectIds)");
+			$this->Course->query("DELETE FROM subjects WHERE course_id = {$this->Course->Subject->id}");
+			$this->Course->delete($this->Course->id);
+			$this->Session->setFlash('El curso no se pudo copiar.');
+			$this->redirect($this->referer());
+		} else {
+			$this->Session->setFlash('El curso se ha copiado correctamente.');
+			$this->redirect(array('action' => 'index'));
+		}
 	}
+
 	
 	function delete($id) {
 		$this->Course->delete($id);
