@@ -119,12 +119,19 @@ class CoursesController extends AppController {
 		$this->Session->setFlash('El curso ha sido eliminado correctamente');
 		$this->redirect(array('action' => 'index'));
 	}
-	
+
+	/**
+	 * Shows a summary of lecture hours by teacher
+	 *
+	 * @param integer $id ID of a course
+	 * @return void
+	 * @since 2012-05-19
+	 */
 	function stats_by_teacher($course_id = null) {
 	  $this->Course->id = $course_id;
 		$this->set('course', $this->Course->read());
 		$this->set('friendly_name', $this->Course->friendly_name());
-		$date = Date('Y-m-d');
+		$date = date('Y-m-d');
 
 		$teachers = $this->Course->query("
 			SELECT Teacher.*, IFNULL(teorical.total, 0) AS teorical, IFNULL(practice.total, 0) AS practice, IFNULL(others.total, 0) AS others
