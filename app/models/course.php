@@ -85,8 +85,12 @@ class Course extends AcademicModel {
 	
 	function afterFind($results, $primary){
 		foreach ($results as $key => $val) {
-			$results[$key]['Course']['initial_date'] =  $this->dateFormatUser($val['Course']['initial_date']);
-			$results[$key]['Course']['final_date'] = $this->dateFormatUser($val['Course']['final_date']);
+			if (array_key_exists('Course', $results[$key]) && array_key_exists('initial_date', $results[$key]['Course'])) {
+				$results[$key]['Course']['initial_date'] =  $this->dateFormatUser($val['Course']['initial_date']);
+			}
+			if (array_key_exists('Course', $results[$key]) && array_key_exists('final_date', $results[$key]['Course'])) {
+				$results[$key]['Course']['final_date'] = $this->dateFormatUser($val['Course']['final_date']);
+			}
 		}
 		return $results;
 	}

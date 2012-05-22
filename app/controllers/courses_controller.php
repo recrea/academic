@@ -128,10 +128,11 @@ class CoursesController extends AppController {
 	 * @since 2012-05-19
 	 */
 	function stats_by_teacher($course_id = null) {
-	  $this->Course->id = $course_id;
-		$this->set('course', $this->Course->read());
+		$this->set('course', $this->Course->read(null, $course_id));
 		$this->set('friendly_name', $this->Course->friendly_name());
-		$date = date('Y-m-d');
+
+		$initialDate = date('Y-m-d', strtotime($this->Course->field('initial_date', array('Course.id' => $course_id))));
+		$finalDate = date('Y-m-d', strtotime($this->Course->field('final_date', array('Course.id' => $course_id))));
 
 		$teachers = $this->Course->query("
 			SELECT Teacher.*, IFNULL(teorical.total, 0) AS teorical, IFNULL(practice.total, 0) AS practice, IFNULL(others.total, 0) AS others
@@ -143,7 +144,13 @@ class CoursesController extends AppController {
 					FROM attendance_registers ar1
 					INNER JOIN activities ON ar1.activity_id = activities.id
 					INNER JOIN subjects ON subjects.id = activities.subject_id
-					WHERE DATE_FORMAT(ar1.initial_hour, '%Y-%m-%d') <= '{$date}' UNION ALL SELECT ar2.duration, ar2.teacher_2_id AS teacher_id, IF(activities2.type IN ('Clase magistral', 'Seminario'), 'T', IF(activities2.type IN ('Tutoría', 'Evaluación', 'Taller/trabajo en grupo'), 'O', 'P')) AS type, subjects2.course_id FROM attendance_registers ar2 INNER JOIN activities activities2 ON ar2.activity_id = activities2.id INNER JOIN subjects subjects2 ON subjects2.id = activities2.subject_id WHERE DATE_FORMAT(ar2.initial_hour, '%Y-%m-%d') <= '{$date}'
+					WHERE DATE_FORMAT(ar1.initial_hour, '%Y-%m-%d') >= '{$initialDate}' AND DATE_FORMAT(ar1.final_hour, '%Y-%m-%d') <= '{$finalDate}'
+					UNION ALL
+						SELECT ar2.duration, ar2.teacher_2_id AS teacher_id, IF(activities2.type IN ('Clase magistral', 'Seminario'), 'T', IF(activities2.type IN ('Tutoría', 'Evaluación', 'Taller/trabajo en grupo'), 'O', 'P')) AS type, subjects2.course_id
+						FROM attendance_registers ar2
+						INNER JOIN activities activities2 ON ar2.activity_id = activities2.id
+						INNER JOIN subjects subjects2 ON subjects2.id = activities2.subject_id
+						WHERE DATE_FORMAT(ar2.initial_hour, '%Y-%m-%d') >= '{$initialDate}' AND DATE_FORMAT(ar2.final_hour, '%Y-%m-%d') <= '{$finalDate}'
 				) teacher_stats
 				WHERE type = 'T'
 				AND course_id = {$course_id}
@@ -156,7 +163,13 @@ class CoursesController extends AppController {
 					FROM attendance_registers ar1
 					INNER JOIN activities ON ar1.activity_id = activities.id
 					INNER JOIN subjects ON subjects.id = activities.subject_id
-					WHERE DATE_FORMAT(ar1.initial_hour, '%Y-%m-%d') <= '{$date}' UNION ALL SELECT ar2.duration, ar2.teacher_2_id AS teacher_id, IF(activities2.type IN ('Clase magistral', 'Seminario'), 'T', IF(activities2.type IN ('Tutoría', 'Evaluación', 'Taller/trabajo en grupo'), 'O', 'P')) AS type, subjects2.course_id FROM attendance_registers ar2 INNER JOIN activities activities2 ON ar2.activity_id = activities2.id INNER JOIN subjects subjects2 ON subjects2.id = activities2.subject_id WHERE DATE_FORMAT(ar2.initial_hour, '%Y-%m-%d') <= '{$date}'
+					WHERE DATE_FORMAT(ar1.initial_hour, '%Y-%m-%d') >= '{$initialDate}' AND DATE_FORMAT(ar1.final_hour, '%Y-%m-%d') <= '{$finalDate}'
+					UNION ALL
+						SELECT ar2.duration, ar2.teacher_2_id AS teacher_id, IF(activities2.type IN ('Clase magistral', 'Seminario'), 'T', IF(activities2.type IN ('Tutoría', 'Evaluación', 'Taller/trabajo en grupo'), 'O', 'P')) AS type, subjects2.course_id
+						FROM attendance_registers ar2
+						INNER JOIN activities activities2 ON ar2.activity_id = activities2.id
+						INNER JOIN subjects subjects2 ON subjects2.id = activities2.subject_id
+						WHERE DATE_FORMAT(ar2.initial_hour, '%Y-%m-%d') >= '{$initialDate}' AND DATE_FORMAT(ar2.final_hour, '%Y-%m-%d') <= '{$finalDate}'
 				) teacher_stats
 				WHERE type = 'P'
 				AND course_id = {$course_id}
@@ -169,7 +182,13 @@ class CoursesController extends AppController {
 					FROM attendance_registers ar1
 					INNER JOIN activities ON ar1.activity_id = activities.id
 					INNER JOIN subjects ON subjects.id = activities.subject_id
-					WHERE DATE_FORMAT(ar1.initial_hour, '%Y-%m-%d') <= '{$date}' UNION ALL SELECT ar2.duration, ar2.teacher_2_id AS teacher_id, IF(activities2.type IN ('Clase magistral', 'Seminario'), 'T', IF(activities2.type IN ('Tutoría', 'Evaluación', 'Taller/trabajo en grupo'), 'O', 'P')) AS type, subjects2.course_id FROM attendance_registers ar2 INNER JOIN activities activities2 ON ar2.activity_id = activities2.id INNER JOIN subjects subjects2 ON subjects2.id = activities2.subject_id WHERE DATE_FORMAT(ar2.initial_hour, '%Y-%m-%d') <= '{$date}'
+					WHERE DATE_FORMAT(ar1.initial_hour, '%Y-%m-%d') >= '{$initialDate}' AND DATE_FORMAT(ar1.final_hour, '%Y-%m-%d') <= '{$finalDate}'
+					UNION ALL
+						SELECT ar2.duration, ar2.teacher_2_id AS teacher_id, IF(activities2.type IN ('Clase magistral', 'Seminario'), 'T', IF(activities2.type IN ('Tutoría', 'Evaluación', 'Taller/trabajo en grupo'), 'O', 'P')) AS type, subjects2.course_id
+						FROM attendance_registers ar2
+						INNER JOIN activities activities2 ON ar2.activity_id = activities2.id
+						INNER JOIN subjects subjects2 ON subjects2.id = activities2.subject_id
+						WHERE DATE_FORMAT(ar2.initial_hour, '%Y-%m-%d') >= '{$initialDate}' AND DATE_FORMAT(ar2.final_hour, '%Y-%m-%d') <= '{$finalDate}'
 				) teacher_stats
 				WHERE type = 'O'
 				AND course_id = {$course_id}
