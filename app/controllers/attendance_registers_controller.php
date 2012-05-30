@@ -371,7 +371,14 @@ class AttendanceRegistersController extends AppController {
 		}
 
 		$this->AttendanceRegister->query("DELETE FROM users_attendance_register WHERE attendance_register_id = $id");
-		if ($this->AttendanceRegister->delete($id, true)) {
+		$updated = $this->AttendanceRegister->updateAll(
+			array(
+				'AttendanceRegister.duration' => 0.0,
+				'AttendanceRegister.num_students' => 0,
+			),
+			array('AttendanceRegister.id' => $id)
+		);
+		if ($updated) {
 			$this->Session->setFlash('El registro de asistencia se eliminó correctamente.');
 			$this->redirect(array('action' => 'index'));
 		}
