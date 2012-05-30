@@ -99,9 +99,7 @@
 	</div>
 
 	<div id="footer">
-		<?php 
-			//echo $this->element('sql_dump'); 
-		?>
+		<?php //echo $this->element('sql_dump') ?>
 	</div>
 
 </body>

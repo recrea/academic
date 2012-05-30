@@ -108,6 +108,8 @@ class AttendanceRegistersController extends AppController {
 
 	/**
 	 * Returns details of an attendance register via AJAX call
+	 *
+	 * @version 2012-05-30
 	 */
 	function get_register_info($event_id = null){
 		list($id) = sscanf($event_id, "%d");
@@ -121,24 +123,26 @@ class AttendanceRegistersController extends AppController {
 		$ar["Teacher_2"] = $teacher2["Teacher_2"];
 
 		if ($ar != null) {
-			$students = $this->AttendanceRegister->Student->query("
-				SELECT Student.*
-				FROM users Student
-				INNER JOIN registrations Registration ON Registration.student_id = Student.id
-				WHERE Registration.group_id = {$ar['AttendanceRegister']['group_id']}
-				AND Registration.activity_id = {$ar['AttendanceRegister']['activity_id']}
-				ORDER BY Student.last_name, Student.first_name
-				");
-
-			/**
-			 * Alternative query to recover existing records in users_attendance_register table:
-			 *
-			 * SELECT Student.*
-			 * FROM users Student
-			 * INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id
-			 * WHERE UAR.attendance_register_id = {$ar['AttendanceRegister']['id']}
-			 * ORDER BY Student.last_name, Student.first_name");
-			 */
+			$students = array();
+			if (empty($ar['Student'])) {
+				// Load student list from original registration
+				$students = $this->AttendanceRegister->Student->query("
+					SELECT Student.*
+					FROM users Student
+					INNER JOIN registrations Registration ON Registration.student_id = Student.id
+					WHERE Registration.group_id = {$ar['AttendanceRegister']['group_id']}
+					AND Registration.activity_id = {$ar['AttendanceRegister']['activity_id']}
+					ORDER BY Student.last_name, Student.first_name
+					");
+			} else {
+				// Load student list from preloaded attendance registers
+				$students = $this->AttendanceRegister->Student->query("SELECT Student.*
+					FROM users Student
+					INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id
+					WHERE UAR.attendance_register_id = {$ar['AttendanceRegister']['id']}
+					ORDER BY Student.last_name, Student.first_name
+					");
+			}
 
 			$subject = $this->AttendanceRegister->Activity->Subject->findById($ar['Activity']['subject_id']);
 			$this->set('ar', $ar);
@@ -181,7 +185,9 @@ class AttendanceRegistersController extends AppController {
 	/**
 	 * Prints PDF with a list of students registered in the activity
 	 *
-	 * @since 2012-05-18
+	 * @param integer $event_id ID of an event
+	 * @return void
+	 * @version 2012-05-30
 	 */
 	function print_attendance_file($event_id = null){
 		$this->layout = 'print';
@@ -189,36 +195,47 @@ class AttendanceRegistersController extends AppController {
 			return;
 		}
 
+		// Preload a list of students attending to this activity
 		$event = $this->AttendanceRegister->Event->findById($event_id);
-		$students = $this->AttendanceRegister->Student->query("
-			SELECT Student.*
-			FROM users Student
-			INNER JOIN registrations Registration ON Student.id = Registration.student_id
-			WHERE Registration.activity_id = {$event['Event']['activity_id']}
-			AND Registration.group_id = {$event['Event']['group_id']}
-			ORDER BY Student.last_name, Student.first_name
-			");
-
 		if ($event['AttendanceRegister']['id'] == null) {
-			$ar = array('AttendanceRegister' => array(
-				'event_id' => $event_id,
-				'activity_id' => $event['Activity']['id'],
-				'group_id' => $event['Group']['id'],
-				'teacher_id' => $event['Teacher']['id'],
-				'teacher_2_id' => $event['Teacher_2']['id']
-			));
-			$this->AttendanceRegister->save($ar);
+			$students = $this->AttendanceRegister->Student->query("
+				SELECT Student.id
+				FROM users Student
+				INNER JOIN registrations Registration ON Student.id = Registration.student_id
+				WHERE Registration.activity_id = {$event['Event']['activity_id']}
+				AND Registration.group_id = {$event['Event']['group_id']}
+				ORDER BY Student.last_name, Student.first_name
+				");
+
+			$ar = array(
+				'AttendanceRegister' => array(
+					'event_id' => $event_id,
+					'activity_id' => $event['Activity']['id'],
+					'group_id' => $event['Group']['id'],
+					'teacher_id' => $event['Teacher']['id'],
+					'teacher_2_id' => $event['Teacher_2']['id'],
+				),
+				'Student' => array('Student' => array_unique(Set::classicExtract($students, '{n}.Student.id'))),
+			);
+			$this->AttendanceRegister->create();
+			$this->AttendanceRegister->saveAll($ar);
+
 			$event['AttendanceRegister'] = $ar;
 			$event['AttendanceRegister']['id'] = $this->AttendanceRegister->id;
 		} else {
-			if (!(isset($event["Teacher_2"]["id"])) || ($event["Teacher_2"]["id"] == null)) {
+			if (!isset($event["Teacher_2"]["id"])) {
 				$event["Teacher_2"]["id"] = -1;
 			}
-
 			$this->AttendanceRegister->query("UPDATE attendance_registers SET teacher_id = {$event["Teacher"]["id"]} AND teacher_2_id = {$event["Teacher_2"]["id"]} WHERE id = {$event['AttendanceRegister']['id']}");
-			$this->AttendanceRegister->id = $event['AttendanceRegister']['id'];
-			$ar = $this->AttendanceRegister->read();
 		}
+
+		$students = $this->AttendanceRegister->query("
+			SELECT Student.*
+			FROM users Student
+			INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id
+			WHERE UAR.attendance_register_id = {$event['AttendanceRegister']['id']}
+			ORDER BY Student.last_name, Student.first_name
+			");
 
 		$this->set('event', $event);
 		$this->set('students', $students);
@@ -250,13 +267,19 @@ class AttendanceRegistersController extends AppController {
 
 	/**
 	 * Edits student attendance to a given activity
+	 * before the activity takes place
+	 *
+	 * @param integer $event_id ID of an event
+	 * @return void
+	 * @version 2012-05-30
 	 */
-	function edit_student_attendance($event_id = null){
-		if (!empty($this->data)){
+	function edit_student_attendance($event_id = null) {
+		// Preload student attendance by saving an attendance register
+		if (!empty($this->data)) {
 			list($id) = sscanf($this->data['AttendanceRegister']['id'], "%d");
 
 			$ar = $this->AttendanceRegister->read(null, $id);
-			if (isset($this->data['AttendanceRegister']['students'])){
+			if (isset($this->data['AttendanceRegister']['students'])) {
 				$students = array_unique(array_keys($this->data['AttendanceRegister']['students']));
 				$this->data['Student']['Student'] = $students;
 				unset($this->data['AttendanceRegister']['students']);
@@ -264,10 +287,9 @@ class AttendanceRegistersController extends AppController {
 				$this->data['Student']['Student'] = null;
 			}
 
-			if ($this->AttendanceRegister->save($this->data)){
+			if ($this->AttendanceRegister->save($this->data)) {
 				$this->Session->setFlash('El registro de asistencia se ha creado correctamente.');
 				$course = $this->AttendanceRegister->Activity->Subject->Course->current();
-
 				$this->redirect(array('action' => 'view_my_registers', $course['id']));
 			} else {
 				$this->Session->setFlash('No se ha podido crear el registro de asistencia. Por favor, revise que ha introducido todos los datos correctamente.');
@@ -291,9 +313,22 @@ class AttendanceRegistersController extends AppController {
 			}
 
 			if ((isset($ar['Student'])) && (count($ar['Student']))) {
-				$students = $this->AttendanceRegister->query("SELECT Student.* FROM users Student INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id WHERE UAR.attendance_register_id = {$ar['AttendanceRegister']['id']} ORDER BY Student.last_name, Student.first_name");
+				$students = $this->AttendanceRegister->query("
+					SELECT Student.*
+					FROM users Student
+					INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id
+					WHERE UAR.attendance_register_id = {$ar['AttendanceRegister']['id']}
+					ORDER BY Student.last_name, Student.first_name
+					");
 			} else {
-				$students = $this->AttendanceRegister->query("SELECT Student.* FROM users Student INNER JOIN registrations ON registrations.student_id = Student.id WHERE registrations.activity_id = {$event['Event']['activity_id']} AND registrations.group_id = {$event['Event']['group_id']} ORDER BY Student.last_name, Student.first_name");
+				$students = $this->AttendanceRegister->query("
+					SELECT Student.*
+					FROM users Student
+					INNER JOIN registrations ON registrations.student_id = Student.id
+					WHERE registrations.activity_id = {$event['Event']['activity_id']}
+					AND registrations.group_id = {$event['Event']['group_id']}
+					ORDER BY Student.last_name, Student.first_name
+					");
 			}
 
 			$students_raw = array();
@@ -336,14 +371,7 @@ class AttendanceRegistersController extends AppController {
 		}
 
 		$this->AttendanceRegister->query("DELETE FROM users_attendance_register WHERE attendance_register_id = $id");
-		$updated = $this->AttendanceRegister->updateAll(
-			array(
-				'AttendanceRegister.duration' => 0.0,
-				'AttendanceRegister.num_students' => 0,
-			),
-			array('AttendanceRegister.id' => $id)
-		);
-		if ($updated) {
+		if ($this->AttendanceRegister->delete($id, true)) {
 			$this->Session->setFlash('El registro de asistencia se eliminó correctamente.');
 			$this->redirect(array('action' => 'index'));
 		}

@@ -1,12 +1,8 @@
-<?php 	
-	$initial_hour = date_create($ar['Event']['initial_hour']);
-	$final_hour = date_create($ar['Event']['final_hour']);
-?>
+<?php $initial_hour = date_create($ar['Event']['initial_hour']) ?>
+<?php $final_hour = date_create($ar['Event']['final_hour']) ?>
 <h1>Editar registro de asistencia</h1>
 
-<?php
-	echo $form->create('AttendanceRegister', array('action' => 'edit_student_attendance'));
-?>
+<?php echo $form->create('AttendanceRegister', array('action' => 'edit_student_attendance')); ?>
 	<fieldset>
 	<legend>Datos generales</legend>
 		<div class="input">
