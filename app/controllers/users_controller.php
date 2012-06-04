@@ -290,46 +290,65 @@ class UsersController extends AppController {
 	  $this->set('courses', $courses);
 	  $this->set('user', $user);
 	}
-	
-	function teacher_stats_details($id = null){
-	  $this->User->id = $id;
-		$user = $this->User->read();
-		
-		$course_id =  $this->params['url']['course_id'];
+
+	/**
+	 * Shows detailed summary about teaching statistics
+	 *
+	 * @param integer $id ID of a teacher
+	 * @version 2012-06-04
+	 */
+	function teacher_stats_details($id = null) {
+		$user = $this->User->read(null,$id);
+		$course_id = $this->params['url']['course_id'];
 		
 	  $subjects_as_coordinator = $this->User->query("SELECT Subject.* FROM subjects Subject WHERE Subject.course_id = {$course_id} AND Subject.coordinator_id = {$user["User"]["id"]} ORDER BY Subject.code");
 	  $subjects_as_practice_responsible = $this->User->query("SELECT Subject.* FROM subjects Subject WHERE Subject.course_id = {$course_id} AND Subject.practice_responsible_id = {$user["User"]["id"]} ORDER BY Subject.code");
-	  
-	  $registrations = $this->User->query("SELECT Subject.code, AttendanceRegister.*, Activity.* FROM attendance_registers AttendanceRegister INNER JOIN activities Activity ON Activity.id = AttendanceRegister.activity_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE (AttendanceRegister.teacher_id = {$user["User"]["id"]} OR AttendanceRegister.teacher_2_id = {$user["User"]["id"]}) AND AttendanceRegister.duration > 0 AND Subject.course_id = {$course_id} ORDER BY AttendanceRegister.initial_hour DESC");
-	  
-	  $total_hours = $this->User->query("SELECT SUM(IFNULL(AttendanceRegister.duration, 0)) as total FROM attendance_registers AttendanceRegister INNER JOIN activities ON activities.id = AttendanceRegister.activity_id INNER JOIN subjects ON subjects.id = activities.subject_id WHERE (AttendanceRegister.teacher_id = {$user["User"]["id"]} OR AttendanceRegister.teacher_2_id = {$user["User"]["id"]}) AND subjects.course_id = {$course_id}");
-	  
-	  $hours_group_by_activity_type = $this->User->query("SELECT subjects.id, subjects.code, subjects.name, IF(activities.type IN ('Clase magistral', 'Seminario'), 'T', IF(activities.type IN ('Tutoría', 'Evaluación', 'Taller/trabajo en grupo'), 'O', 'P')) as type, SUM(IFNULL(AttendanceRegister.duration, 0)) as total FROM attendance_registers AttendanceRegister INNER JOIN activities ON activities.id = AttendanceRegister.activity_id INNER JOIN subjects ON subjects.id = activities.subject_id WHERE (AttendanceRegister.teacher_id = {$user["User"]["id"]} OR AttendanceRegister.teacher_2_id = {$user["User"]["id"]}) AND subjects.course_id = {$course_id} GROUP BY subjects.id, type ORDER BY subjects.code");
-	  $hours_group_by_subject = array();
-	  foreach($hours_group_by_activity_type as $record):
-	    $id = $record['subjects']['id'];
-	    if (!isset($hours_group_by_subject[$id])) {
-	      $hours_group_by_subject[$id] = array();
-	      $hours_group_by_subject[$id]['code'] = $record['subjects']['code'];
-	      $hours_group_by_subject[$id]['name'] = $record['subjects']['name'];
-	    }
-	    $hours_group_by_subject[$id][$record[0]['type']] = $record[0]['total'];
-	  endforeach; 
-	  
-	  $practical_hours = $this->User->query("SELECT SUM(IFNULL(AttendanceRegister.duration, 0)) as total FROM attendance_registers AttendanceRegister INNER JOIN activities ON activities.id = AttendanceRegister.activity_id INNER JOIN subjects ON subjects.id = activities.subject_id WHERE (AttendanceRegister.teacher_id = {$user["User"]["id"]} OR AttendanceRegister.teacher_2_id = {$user["User"]["id"]}) AND activities.type IN ('Práctica en aula', 'Práctica de problemas', 'Práctica de informática', 'Práctica de microscopía', 'Práctica de laboratorio', 'Práctica clínica', 'Práctica externa') AND subjects.course_id = {$course_id}");
-	  
-	  $teorical_hours = $this->User->query("SELECT SUM(IFNULL(AttendanceRegister.duration, 0)) as total FROM attendance_registers AttendanceRegister INNER JOIN activities ON activities.id = AttendanceRegister.activity_id INNER JOIN subjects ON subjects.id = activities.subject_id WHERE (AttendanceRegister.teacher_id = {$user["User"]["id"]} OR AttendanceRegister.teacher_2_id = {$user["User"]["id"]}) AND activities.type IN ('Clase magistral', 'Seminario') AND subjects.course_id = {$course_id}");
-	  $other_hours = $this->User->query("SELECT SUM(IFNULL(AttendanceRegister.duration, 0)) as total FROM attendance_registers AttendanceRegister INNER JOIN activities ON activities.id = AttendanceRegister.activity_id INNER JOIN subjects ON subjects.id = activities.subject_id WHERE (AttendanceRegister.teacher_id = {$user["User"]["id"]} OR AttendanceRegister.teacher_2_id = {$user["User"]["id"]}) AND activities.type IN ('Tutoría', 'Evaluación', 'Taller/trabajo en grupo') AND subjects.course_id = {$course_id}");
-	  
+
+		$registrations = $this->User->query("
+			SELECT Subject.code, AttendanceRegister.*, Activity.*
+			FROM attendance_registers AttendanceRegister
+			INNER JOIN activities Activity ON Activity.id = AttendanceRegister.activity_id
+			INNER JOIN subjects Subject ON Subject.id = Activity.subject_id
+			WHERE (AttendanceRegister.teacher_id = {$user["User"]["id"]} OR AttendanceRegister.teacher_2_id = {$user["User"]["id"]})
+			AND AttendanceRegister.duration > 0 AND Subject.course_id = {$course_id}
+			ORDER BY AttendanceRegister.initial_hour DESC
+		");
+
+		$total_hours = $this->User->teachingHours($user['User']['id'], $course_id);
+		$theoretical_hours = $this->User->teachingHours($user['User']['id'], $course_id, 'theory');
+		$practice_hours = $this->User->teachingHours($user['User']['id'], $course_id, 'practice');
+		$other_hours = $this->User->teachingHours($user['User']['id'], $course_id, 'other');
+
+		$hours_group_by_activity_type = $this->User->query("
+			SELECT subjects.id, subjects.code, subjects.name, IF(activities.type IN ('Clase magistral', 'Seminario'), 'T', IF(activities.type IN ('Tutoría', 'Evaluación', 'Taller/trabajo en grupo'), 'O', 'P')) as type, SUM(IFNULL(AttendanceRegister.duration, 0)) as total
+			FROM attendance_registers AttendanceRegister
+			INNER JOIN activities ON activities.id = AttendanceRegister.activity_id
+			INNER JOIN subjects ON subjects.id = activities.subject_id
+			WHERE (AttendanceRegister.teacher_id = {$user["User"]["id"]} OR AttendanceRegister.teacher_2_id = {$user["User"]["id"]})
+			AND subjects.course_id = {$course_id}
+			GROUP BY subjects.id, type
+			ORDER BY subjects.code
+		");
+
+		$hours_group_by_subject = array();
+		foreach($hours_group_by_activity_type as $record) {
+			$id = $record['subjects']['id'];
+			if (!isset($hours_group_by_subject[$id])) {
+				$hours_group_by_subject[$id] = array();
+				$hours_group_by_subject[$id]['code'] = $record['subjects']['code'];
+				$hours_group_by_subject[$id]['name'] = $record['subjects']['name'];
+			}
+			$hours_group_by_subject[$id][$record[0]['type']] = $record[0]['total'];
+		}
+
 	  $this->set('user', $user);
 	  $this->set('subjects_as_coordinator', $subjects_as_coordinator);
 	  $this->set('subjects_as_practice_responsible', $subjects_as_practice_responsible);
 	  $this->set('registers', $registrations);
 	  $this->set('total_hours', $total_hours);
-	  $this->set('practical_hours', $practical_hours);
-	  $this->set('teorical_hours', $teorical_hours);
+	  $this->set('practical_hours', $practice_hours);
+	  $this->set('teorical_hours', $theoretical_hours);
 	  $this->set('other_hours', $other_hours);
-	  
 	  $this->set('hours_group_by_subject', $hours_group_by_subject);
 	}
 	
