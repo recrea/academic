@@ -133,7 +133,7 @@ class AttendanceRegistersController extends AppController {
 					WHERE Registration.group_id = {$ar['AttendanceRegister']['group_id']}
 					AND Registration.activity_id = {$ar['AttendanceRegister']['activity_id']}
 					ORDER BY Student.last_name, Student.first_name
-					");
+				");
 			} else {
 				// Load student list from preloaded attendance registers
 				$students = $this->AttendanceRegister->Student->query("SELECT Student.*
@@ -141,7 +141,7 @@ class AttendanceRegistersController extends AppController {
 					INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id
 					WHERE UAR.attendance_register_id = {$ar['AttendanceRegister']['id']}
 					ORDER BY Student.last_name, Student.first_name
-					");
+				");
 			}
 
 			$subject = $this->AttendanceRegister->Activity->Subject->findById($ar['Activity']['subject_id']);
@@ -205,7 +205,7 @@ class AttendanceRegistersController extends AppController {
 				WHERE Registration.activity_id = {$event['Event']['activity_id']}
 				AND Registration.group_id = {$event['Event']['group_id']}
 				ORDER BY Student.last_name, Student.first_name
-				");
+			");
 
 			$ar = array(
 				'AttendanceRegister' => array(
@@ -237,7 +237,7 @@ class AttendanceRegistersController extends AppController {
 			INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id
 			WHERE UAR.attendance_register_id = {$event['AttendanceRegister']['id']}
 			ORDER BY Student.last_name, Student.first_name
-			");
+		");
 
 		$this->set('event', $event);
 		$this->set('students', $students);

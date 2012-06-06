@@ -58,17 +58,11 @@ class AttendanceRegister extends AcademicModel {
 	}
 	
 	function initialHourNotEmpty(){
-		if ($this->data['AttendanceRegister']['id'] != null)
-			return ($this->data['AttendanceRegister']['initial_hour'] != null);
-		else
-			return true;
+		return ($this->data['AttendanceRegister']['initial_hour'] != null);
 	}
 	
 	function finalHourNotEmpty(){
-		if ($this->data['AttendanceRegister']['id'] != null)
-			return ($this->data['AttendanceRegister']['final_hour'] != null);
-		else
-			return true;
+		return ($this->data['AttendanceRegister']['final_hour'] != null);
 	}
 
 	function _get_register_duration($initial_hour, $final_hour) {
