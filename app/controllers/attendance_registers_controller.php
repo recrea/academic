@@ -210,6 +210,8 @@ class AttendanceRegistersController extends AppController {
 			$ar = array(
 				'AttendanceRegister' => array(
 					'event_id' => $event_id,
+					'initial_hour' => $event['Event']['initial_hour'],
+					'final_hour' => $event['Event']['final_hour'],
 					'activity_id' => $event['Activity']['id'],
 					'group_id' => $event['Group']['id'],
 					'teacher_id' => $event['Teacher']['id'],
