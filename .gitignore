@@ -2,3 +2,4 @@
 /app/config/database.php
 /app/config/core.php
 /app/config/db.sql
+/app/webroot/img/barcode
