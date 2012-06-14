@@ -195,9 +195,9 @@ class AttendanceRegistersController extends AppController {
 			return;
 		}
 
-		// Preload a list of students attending to this activity
 		$event = $this->AttendanceRegister->Event->findById($event_id);
 		if ($event['AttendanceRegister']['id'] == null) {
+			// Preload a list of students attending to this activity
 			$students = $this->AttendanceRegister->Student->query("
 				SELECT Student.id
 				FROM users Student
@@ -228,7 +228,11 @@ class AttendanceRegistersController extends AppController {
 			if (!isset($event["Teacher_2"]["id"])) {
 				$event["Teacher_2"]["id"] = -1;
 			}
-			$this->AttendanceRegister->query("UPDATE attendance_registers SET teacher_id = {$event["Teacher"]["id"]} AND teacher_2_id = {$event["Teacher_2"]["id"]} WHERE id = {$event['AttendanceRegister']['id']}");
+			$this->AttendanceRegister->query("
+				UPDATE attendance_registers
+				SET teacher_id = {$event["Teacher"]["id"]} AND teacher_2_id = {$event["Teacher_2"]["id"]}
+				WHERE id = {$event['AttendanceRegister']['id']}
+			");
 		}
 
 		$students = $this->AttendanceRegister->query("
@@ -238,6 +242,28 @@ class AttendanceRegistersController extends AppController {
 			WHERE UAR.attendance_register_id = {$event['AttendanceRegister']['id']}
 			ORDER BY Student.last_name, Student.first_name
 		");
+
+		/**
+		 * Temporary fix to reload students from original registrations.
+		 *
+		 * After deleting corrupted registers from `users_attendance_register` table,
+		 * several `attendance_registers` records remained created without associated
+		 * students. Future records will be created correctly, but this is necessary
+		 * to restore previous associations with students.
+		 *
+		 * @author Eliezer Talon <elitalon@gmail.com>
+		 * @since 2012-06-14
+		 */
+		if (empty($students)) {
+			$students = $this->AttendanceRegister->Student->query("
+				SELECT Student.*
+				FROM users Student
+				INNER JOIN registrations Registration ON Student.id = Registration.student_id
+				WHERE Registration.activity_id = {$event['Event']['activity_id']}
+				AND Registration.group_id = {$event['Event']['group_id']}
+				ORDER BY Student.last_name, Student.first_name
+			");
+		}
 
 		$this->set('event', $event);
 		$this->set('students', $students);
