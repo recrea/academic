@@ -8,7 +8,7 @@
 	$random = rand(0,1000000);
 	$file = 'img/barcode/code_'.$random.'.png';
 	
-//	$barcode->writeBarcodeFile($file);
+	$barcode->writeBarcodeFile($file);
 
 	$initial_hour = date_create($event['Event']['initial_hour']);
 	$final_hour = date_create($event['Event']['final_hour']);
