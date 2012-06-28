@@ -197,7 +197,7 @@
 			}
 		}
 		
-		function view($id){
+		function view($id) {
 			$this->Event->id = $id;
 			$event = $this->Event->read();
 			$this->set('event', $this->Event->read());
@@ -288,19 +288,19 @@
 		
 		function _authorize() {
 			parent::_authorize();
-			
+
 			$private_actions = array('schedule', 'add', 'edit', 'update', 'delete', 'update_teacher');
 			$student_actions = array('register_student');
-			
-			if ((array_search($this->params['action'], $private_actions) !== false) && ($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Profesor")) 
+
+			if ((array_search($this->params['action'], $private_actions) !== false) && ($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Profesor")) {
 				return false;
-			
-			if ((array_search($this->params['action'], $student_actions) !== false) && ($this->Auth->user('type') != "Estudiante"))
+			}
+
+			if ((array_search($this->params['action'], $student_actions) !== false) && ($this->Auth->user('type') != "Estudiante")) {
 				return false;
-				
-			$this->set('section', 'courses');
+			}
+
 			return true;
 		}
-		
 	}
 ?>
