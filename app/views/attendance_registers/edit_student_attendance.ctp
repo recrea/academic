@@ -74,7 +74,7 @@
 		</table>		
 	</fieldset>
 <?php
-	echo $form->end('Crear');
+	echo $form->end('Guardar');
 ?>
 <script type="text/javascript">
 	$(function() {
