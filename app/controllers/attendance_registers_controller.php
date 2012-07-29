@@ -230,7 +230,7 @@ class AttendanceRegistersController extends AppController {
 			}
 			$this->AttendanceRegister->query("
 				UPDATE attendance_registers
-				SET teacher_id = {$event["Teacher"]["id"]} AND teacher_2_id = {$event["Teacher_2"]["id"]}
+				SET teacher_id = {$event["Teacher"]["id"]}, teacher_2_id = {$event["Teacher_2"]["id"]}
 				WHERE id = {$event['AttendanceRegister']['id']}
 			");
 		}
