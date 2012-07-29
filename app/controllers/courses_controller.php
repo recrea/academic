@@ -42,6 +42,7 @@ class CoursesController extends AppController {
 	 * @param integer $id ID of a course
 	 * @return void
 	 * @since 2012-05-19
+	 * @version 2012-07-29
 	 */
 	function copy($id) {
 		$course = $this->Course->findById($id);
@@ -49,7 +50,6 @@ class CoursesController extends AppController {
 		// Creates the new course
 		$newCourse = array('Course' => array());
 		$newCourse["Course"]["name"] = sprintf('%s (COPIA)', $course["Course"]["name"]);
-		$newCourse["Course"]["created_at"] = date('Y-m-d H:i:s');
 		$latestFinalDate = $this->Course->latestFinalDate();
 		$newCourse["Course"]["initial_date"] = date('Y-m-d', strtotime($latestFinalDate) + 86400);
 		$newCourse["Course"]["final_date"] = date('Y-m-d', strtotime($latestFinalDate) + 31536000);

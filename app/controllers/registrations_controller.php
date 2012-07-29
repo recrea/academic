@@ -57,7 +57,7 @@ class RegistrationsController extends AppController {
 	}
 	
 	function view_students_registered($activity_id = null, $group_id = null) {
-		$registrations = $this->Registration->query("SELECT `Registration`.`group_id`, `Registration`.`activity_id`, `Registration`.`student_id`, `Registration`.`id`, `User`.`id`, `User`.`type`, `User`.`dni`, `User`.`first_name`, `User`.`last_name`, `User`.`username`, `User`.`phone`, `User`.`password`, `User`.`created_at` FROM `registrations` AS `Registration` LEFT JOIN `users` AS `User` ON (`User`.`id` = `Registration`.`student_id`) WHERE `activity_id` = {$activity_id} AND `group_id` = {$group_id} ORDER BY `User`.`last_name`, `User`.`first_name`");
+		$registrations = $this->Registration->query("SELECT `Registration`.`group_id`, `Registration`.`activity_id`, `Registration`.`student_id`, `Registration`.`id`, `User`.`id`, `User`.`type`, `User`.`dni`, `User`.`first_name`, `User`.`last_name`, `User`.`username`, `User`.`phone`, `User`.`password` FROM `registrations` AS `Registration` LEFT JOIN `users` AS `User` ON (`User`.`id` = `Registration`.`student_id`) WHERE `activity_id` = {$activity_id} AND `group_id` = {$group_id} ORDER BY `User`.`last_name`, `User`.`first_name`");
 		
 		$this->set('section', 'groups');
 		$this->set('registrations', $registrations);
