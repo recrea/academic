@@ -3,9 +3,7 @@
 <?php $html->addCrumb('Crear registro de impartición masivo', '/massive_attendance_registers/add'); ?>
 
 <h1>Crear registro de impartición masivo</h1>
-<?php
-	echo $form->create('MassiveAttendanceRegister');
-?>
+	<?php echo $form->create('MassiveAttendanceRegister'); ?>
   <fieldset>
     <dl>
       <dt>Aula</dt>
@@ -25,13 +23,10 @@
     <input type="hidden" id="course_id" name="course_id" value="<?php echo $course['Course']['id'] ?>"/>
   </fieldset>
   
-  <?php if ((isset($date)) && (isset($classroom))) { ?>
-    
+  <?php if ((isset($date)) && (isset($classroom))) { ?>  
     <fieldset>
       <legend>Registros de impartición</legend>
-
       <br />
-    
     	<table>
     	  <thead>
     	    <tr>
@@ -47,16 +42,17 @@
     	  </thead>
     	  <tbody>
     	    <?php foreach($registers as $register):?>
-    	      <?
-    	        $initial_date = date_create($register['AttendanceRegister']['initial_hour']);
-    	      ?>
+    	      <?php $initial_date = date_create($register['AttendanceRegister']['initial_hour']); ?>
     	      <tr>
     	        <td>
     	          <input id="registers_<?php echo $register['AttendanceRegister']['id']?>_initial_date" name="registers[<?php echo $register['AttendanceRegister']['id']?>][initial_date]" value="<?php echo $initial_date->format("d-m-Y") ?>" class="initial_date"/>
     	          <input type="hidden" id="registers_<?php echo $register['AttendanceRegister']['id']?>_event_id" name="registers[<?php echo $register['AttendanceRegister']['id']?>][event_id]" value="<?php echo $register['AttendanceRegister']['event_id'] ?>"/>
     	        </td>
     	        <td><input id="registers_<?php echo $register['AttendanceRegister']['id']?>_initial_hour" name="registers[<?php echo $register['AttendanceRegister']['id']?>][initial_hour]" value="<?php echo $initial_date->format("H:i") ?>" class="initial_hour"/></td>
-    	        <td><input id="register_<?php echo $register['AttendanceRegister']['id']?>_final_hour" value="<?php echo $register['AttendanceRegister']['duration']?>" name="registers[<?php echo $register['AttendanceRegister']['id']?>][duration]" class="duration"/></td>
+    	        <td>
+								<?php $duration = ($register['AttendanceRegister']['duration'] == 0.0) ? $register['Event']['duration'] : $register['AttendanceRegister']['duration'] ?>
+								<input id="register_<?php echo $register['AttendanceRegister']['id']?>_final_hour" value="<?php echo $register['AttendanceRegister']['duration'] ?>" name="registers[<?php echo $register['AttendanceRegister']['id']?>][duration]" class="duration"/>
+							</td>
     	        <td><?php echo $register['Subject']['name'] ?></td>
     	        <td>
     	          <?php echo $register['Activity']['name'] ?>

@@ -8,7 +8,6 @@ class MassiveAttendanceRegistersController extends AppController {
 		if ($course_id == null) {
 			$course_id = $this->params['form']['course_id'];
 		}
-
 		$course = $this->MassiveAttendanceRegister->Subject->Course->findById($course_id);
 		$classrooms = $this->MassiveAttendanceRegister->AttendanceRegister->Event->Classroom->find('all', array('order' => 'name'));
 
@@ -21,9 +20,7 @@ class MassiveAttendanceRegistersController extends AppController {
 		$this->set('classrooms', $classrooms_mapped);
 
 		if ((isset($this->params['form']['registers'])) && ($this->_valid())) {
-
 			foreach($this->params['form']['registers'] as $id => $data) {
-
 				$initial_hour = new DateTime($data['initial_date']." ".$data['initial_hour']);
 				$final_hour = $initial_hour;
 				$this->_add_days($final_hour, 0, $data['duration'] * 60);
@@ -31,11 +28,11 @@ class MassiveAttendanceRegistersController extends AppController {
 				$initial_hour = $initial_hour->format('Y-m-d H:i:s');
 				$final_hour = $final_hour->format('Y-m-d H:i:s');
 
-				if ($data['teacher_2_id'] == '')
+				if ($data['teacher_2_id'] == '') {
 					$teacher_2_id = "NULL";
-				else
+				} else {
 					$teacher_2_id = $data['teacher_2_id'];
-
+				}
 				$this->MassiveAttendanceRegister->query("UPDATE attendance_registers SET"
 					. " teacher_id = {$data['teacher_id']},"
 					. " teacher_2_id = {$teacher_2_id},"
@@ -49,27 +46,35 @@ class MassiveAttendanceRegistersController extends AppController {
 			}
 			$this->Session->setFlash('El registro masivo se ha creado con éxito.');
 			$this->redirect(array('action' => 'add', $this->params['form']['course_id']));
-		} else {
-			if ((isset($this->params['form']['date'])) && (isset($this->params['data']['MassiveAttendanceRegister']['classroom']))) {
-				$date = new DateTime($this->params['form']['date']);
-				$classroom = $this->params['data']['MassiveAttendanceRegister']['classroom'];
-				$this->set('date', $date);
-				$this->set('classroom', $classroom);
-				$registers = $this->_load_registers($date, $classroom);
-				$this->set('registers', $registers);
-			}
+		} elseif ((isset($this->params['form']['date'])) && (isset($this->params['data']['MassiveAttendanceRegister']['classroom']))) {
+			$date = new DateTime($this->params['form']['date']);
+			$classroom = $this->params['data']['MassiveAttendanceRegister']['classroom'];
+			$this->set('date', $date);
+			$this->set('classroom', $classroom);
+			$registers = $this->_load_registers($date, $classroom);
+			$this->set('registers', $registers);
 		}
 	}
-
 
 	function _load_registers($date, $classroom_id){
 		$this->_create_attendance_registers($date, $classroom_id);
 
-		$registers = $this->MassiveAttendanceRegister->query("SELECT AttendanceRegister.*, `Group`.name, `Group`.id, Activity.id, Activity.name, User.id, User.first_name, User.last_name, User2.id, User2.first_name, User2.last_name, Subject.name FROM attendance_registers AttendanceRegister INNER JOIN groups `Group` ON `Group`.id = AttendanceRegister.group_id INNER JOIN events Event ON Event.id = AttendanceRegister.event_id INNER JOIN activities Activity ON Activity.id = AttendanceRegister.activity_id AND `Group`.type = Activity.type AND `Group`.subject_id = Activity.subject_id INNER JOIN users User ON User.id = AttendanceRegister.teacher_id LEFT JOIN users User2 ON User2.id = AttendanceRegister.teacher_2_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id AND Subject.id = `Group`.subject_id WHERE DATE_FORMAT(AttendanceRegister.initial_hour, '%Y-%m-%d') = '{$date->format("Y-m-d")}' AND Event.classroom_id = {$classroom_id} ORDER BY AttendanceRegister.initial_hour, Subject.name, Activity.name");
+		$registers = $this->MassiveAttendanceRegister->query("
+			SELECT AttendanceRegister.*, `Group`.name, `Group`.id, Activity.id, Activity.name, User.id, User.first_name, User.last_name, User2.id, User2.first_name, User2.last_name, Subject.name, `Event`.`duration`
+			FROM attendance_registers AttendanceRegister
+			INNER JOIN groups `Group` ON `Group`.id = `AttendanceRegister`.group_id
+			INNER JOIN events `Event` ON `Event`.id = `AttendanceRegister`.event_id
+			INNER JOIN activities Activity ON Activity.id = AttendanceRegister.activity_id AND `Group`.type = Activity.type AND `Group`.subject_id = Activity.subject_id
+			INNER JOIN users User ON User.id = AttendanceRegister.teacher_id
+			LEFT JOIN users User2 ON User2.id = AttendanceRegister.teacher_2_id
+			INNER JOIN subjects Subject ON Subject.id = Activity.subject_id AND Subject.id = `Group`.subject_id
+			WHERE DATE_FORMAT(AttendanceRegister.initial_hour, '%Y-%m-%d') = '{$date->format("Y-m-d")}'
+			AND Event.classroom_id = {$classroom_id}
+			ORDER BY AttendanceRegister.initial_hour, Subject.name, Activity.name
+		");
 
 		return $registers;
 	}
-
 
 	function _create_attendance_registers($date, $classroom_id) {
 		$events = $this->MassiveAttendanceRegister->query("
@@ -96,7 +101,6 @@ class MassiveAttendanceRegistersController extends AppController {
 		}
 	}
 
-
 	function _authorize(){
 		parent::_authorize();
 
@@ -108,7 +112,6 @@ class MassiveAttendanceRegistersController extends AppController {
 		$this->set('section', 'courses');
 		return true;
 	}
-
 
 	function _add_days(&$date, $ndays, $nminutes = 0){
 		$date_components = split("-", $date->format('Y-m-d-H-i-s'));
