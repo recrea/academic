@@ -205,7 +205,35 @@ class CoursesController extends AppController {
 		$this->set('course', $this->Course->read());
 		$this->set('friendly_name', $this->Course->friendly_name());
   		
-	  $subjects = $this->Course->Subject->query("SELECT subjects.id, subjects.code, subjects.name, SUM(activities.expected_duration) AS expected_hours, SUM(activities.programmed_duration) AS programmed_hours, SUM(activities.registered_duration) AS registered_hours, IFNULL(su.total,0) AS students FROM subjects LEFT JOIN (SELECT subjects_users.subject_id, IFNULL(count(distinct subjects_users.user_id), 0) as total FROM subjects_users INNER JOIN activities ON activities.subject_id = subjects_users.subject_id GROUP BY subjects_users.subject_id) su ON su.subject_id = subjects.id INNER JOIN (SELECT Activity.id, Activity.subject_id, Activity.duration AS expected_duration, SUM(IFNULL(Event.duration, 0)) / `Group`.total AS programmed_duration, IFNULL(SUM(AttendanceRegister.duration), 0) / `Group`.total AS registered_duration FROM activities Activity LEFT JOIN events Event ON Event.activity_id = Activity.id LEFT JOIN (SELECT `groups`.subject_id, `groups`.type, count(id) as total FROM `groups` where `groups`.name NOT LIKE '%no me presento%' GROUP BY `groups`.subject_id, `groups`.type) `Group` ON `Group`.subject_id = Activity.subject_id AND `Group`.type = Activity.type LEFT JOIN (SELECT activity_id, event_id, SUM(duration) AS duration FROM attendance_registers GROUP BY activity_id, event_id) AttendanceRegister ON AttendanceRegister.activity_id = Activity.id AND AttendanceRegister.event_id = Event.id GROUP BY Activity.id) activities ON activities.subject_id = subjects.id WHERE subjects.course_id = {$course_id} GROUP BY subjects.id ORDER BY subjects.code ASC");
+	  $subjects = $this->Course->Subject->query("
+			SELECT subjects.id, subjects.code, subjects.name, SUM(activities.expected_duration) AS expected_hours, SUM(activities.programmed_duration) AS programmed_hours, SUM(activities.registered_duration) AS registered_hours, IFNULL(su.total,0) AS students
+			FROM subjects
+			LEFT JOIN (SELECT subjects_users.subject_id, IFNULL(count(distinct subjects_users.user_id), 0) as total FROM subjects_users INNER JOIN activities ON activities.subject_id = subjects_users.subject_id GROUP BY subjects_users.subject_id) su ON su.subject_id = subjects.id
+			INNER JOIN (
+		
+		
+				SELECT Activity.id, Activity.subject_id, Activity.duration AS expected_duration, SUM(IFNULL(Event.duration, 0)) / `Group`.total AS programmed_duration, IFNULL(SUM(AttendanceRegister.duration), 0) / `Group`.total AS registered_duration
+				FROM activities Activity
+				LEFT JOIN events Event ON Event.activity_id = Activity.id
+				LEFT JOIN (
+					SELECT `groups`.subject_id, `groups`.type, count(id) as total
+					FROM `groups`
+					WHERE `groups`.name NOT LIKE '%no me presento%'
+					GROUP BY `groups`.subject_id, `groups`.type
+				) `Group` ON `Group`.subject_id = Activity.subject_id AND `Group`.type = Activity.type
+				LEFT JOIN (
+					SELECT activity_id, event_id, SUM(duration) AS duration
+					FROM attendance_registers
+					GROUP BY activity_id, event_id
+				) AttendanceRegister ON AttendanceRegister.activity_id = Activity.id AND AttendanceRegister.event_id = Event.id
+				GROUP BY Activity.id
+			
+			
+			)	activities ON activities.subject_id = subjects.id
+			WHERE subjects.course_id = {$course_id}
+			GROUP BY subjects.id
+			ORDER BY subjects.code ASC
+		");
 	  
 	  $this->set('subjects', $subjects);
 	}

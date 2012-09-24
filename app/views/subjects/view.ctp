@@ -11,6 +11,7 @@
   		<li><?php echo $html->link('Crear actividad', array('controller' => 'activities', 'action' => 'add', $subject['Subject']['id'])) ?></li>
   		<li><?php echo $html->link('Ver programación', array('action' => 'getScheduledInfo', $subject['Subject']['id'])) ?></li>
   		<li><?php echo $html->link('Estadísticas estudiante', array('action' => 'students_stats', $subject['Subject']['id'])) ?></li>
+			<li><?php echo $html->link('Estadísticas asignatura', array('action' => 'statistics', $subject['Subject']['id'])) ?></li>
   		<?php if ($auth->user('type') == "Administrador") {?>
   			<li><?php echo $html->link('Editar asignatura', array('action' => 'edit', $subject['Subject']['id'])) ?></li>
   			<li><?php echo $html->link('Eliminar asignatura', array('action' => 'delete', $subject['Subject']['id']), null, 'Cuando elimina una asignatura, elimina también los grupos, las actividades y toda la programación. ¿Está seguro que desea borrarla?') ?></li>

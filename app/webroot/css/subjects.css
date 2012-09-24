@@ -1,0 +1,15 @@
+table.subject-statistics th.date,
+table.subject-statistics td.date {
+	width: 18%;
+}
+
+table.subject-statistics th.duration {
+	text-align: center;
+}
+table.subject-statistics td.duration {
+	text-align: right;
+}
+table.subject-statistics td.total-duration {
+	font-weight: bold;
+	border-bottom: none;
+}

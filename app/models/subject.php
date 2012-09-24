@@ -19,7 +19,7 @@ class Subject extends AcademicModel {
 			'className' => 'Course'
 		),
 		'Coordinator' => array(
-			'className' => 'User', 
+			'className' => 'User',
 			'conditions' => array("(Coordinator.type = 'Profesor' OR Coordinator.type = 'Administrador')")
 		),
 		'Responsible' => array(
@@ -107,5 +107,66 @@ class Subject extends AcademicModel {
 			'Subject.course_id' => $subject['course_id'],
 		))) == 0;
 	}
+
+	/**
+	 * Returns an array of activities with teaching hours for
+	 * a subject
+	 */
+	function activityHoursSummary($id = null) {
+		$subject = $this->findById($id, array('Subject.id', 'Course.initial_date', 'Course.final_date'));
+		$groups = Set::extract('/Group/id', $subject);
+		$activities = Set::extract('/Activity/id', $subject);
+
+		$this->Group->bindModel(array('hasMany' => array('AttendanceRegister')));
+		$registers = $this->Group->AttendanceRegister->query(sprintf(
+			"SELECT `Activity`.`id`, `Activity`.`name`, SUM(`AttendanceRegister`.`duration`) / `Group`.`total` as `activity_total`, `Teacher`.`first_name`, `Teacher`.`last_name`, `AttendanceRegister`.*
+			FROM `attendance_registers` `AttendanceRegister`
+			INNER JOIN `activities` `Activity` ON `Activity`.`id` = `AttendanceRegister`.`activity_id`
+			LEFT JOIN (
+				SELECT `TemporaryGroup`.`subject_id`, `TemporaryGroup`.`type`, count(`TemporaryGroup`.`id`) as `total`
+				FROM `groups` `TemporaryGroup`
+				WHERE `TemporaryGroup`.`name` NOT LIKE '%%no me presento%%'
+				GROUP BY `TemporaryGroup`.`subject_id`, `TemporaryGroup`.`type`
+			) `Group` ON `Group`.`subject_id` = `Activity`.`subject_id` AND `Group`.`type` = `Activity`.`type`
+			INNER JOIN `users` `Teacher` ON `Teacher`.`id` = `AttendanceRegister`.`teacher_id`
+			WHERE `AttendanceRegister`.`group_id` IN (%s)
+			AND `AttendanceRegister`.`activity_id` IN (%s)
+			AND `AttendanceRegister`.`initial_hour` < '2012-09-23 23:59:59'
+			AND `AttendanceRegister`.`initial_hour` >= '2011-07-18 00:00:00'
+			AND `AttendanceRegister`.`initial_hour` <= '2012-07-20 23:59:59'
+			GROUP BY `Activity`.`id`
+			ORDER BY `AttendanceRegister`.`initial_hour` ASC", implode(',', $groups), implode(',', $activities))
+		);
+		return $registers;
+	}
+
+	/**
+	 * Returns an array of attendance registers with teaching hours for
+	 * a subject
+	 */
+	 function teachingHoursSummary($id = null) {
+		 $subject = $this->findById($id, array('Subject.id', 'Course.initial_date'));
+		 $groups = Set::extract('/Group/id', $subject);
+		 $activities = Set::extract('/Activity/id', $subject);
+
+		 $this->Group->bindModel(array('hasMany' => array('AttendanceRegister')));
+		 $registers = $this->Group->AttendanceRegister->find('all', array(
+			 'conditions' => array(
+				 'AttendanceRegister.group_id' => $groups,
+				 'AttendanceRegister.activity_id' => $activities,
+				 'AttendanceRegister.initial_hour < ' => sprintf('%s 23:59:59', date('Y-m-d')),
+				 'AttendanceRegister.initial_hour >= ' => sprintf('%s 00:00:00', strtotime($subject['Course']['initial_date'])),
+			 ),
+			 'fields' => array(
+				 'AttendanceRegister.id', 'AttendanceRegister.initial_hour', 'AttendanceRegister.duration',
+				 'Activity.id', 'Activity.name',
+				 'Group.id', 'Group.name',
+				 'Teacher.first_name', 'Teacher.last_name',
+			 ),
+			 'order' => array('AttendanceRegister.initial_hour'),
+			 'recursive' => 0,
+		 ));
+		 return $registers;
+	 }
 }
 ?>
