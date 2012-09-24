@@ -295,7 +295,7 @@ class AttendanceRegistersController extends AppController {
 
 	/**
 	 * Edits student attendance to a given activity
-	 * before the activity takes place
+	 * after the activity took place
 	 *
 	 * @param integer $event_id ID of an event
 	 * @return void
@@ -324,49 +324,59 @@ class AttendanceRegistersController extends AppController {
 				$this->redirect(array('action' => 'index'));
 			}
 		} else {
+			/**
+			 * Block edition until attendance sheet has been printed
+			 */
 			$ar = $this->AttendanceRegister->findByEventId($event_id);
-			$event = $this->AttendanceRegister->Event->findById($event_id);
-			if (!isset($ar['AttendanceRegister']['id'])) {
-				$this->data['AttendanceRegister'] = array('id' => null,
-					'event_id' => $event['Event']['id'],
-					'initial_hour' => $event['Event']['initial_hour'],
-					'final_hour' => $event['Event']['final_hour'],
-					'activity_id' => $event['Event']['activity_id'],
-					'group_id' => $event['Event']['group_id'],
-					'teacher_id' => $event['Event']['teacher_id'],
-					'teacher_2_id' => $event['Event']['teacher_2_id']);
-
-				$this->AttendanceRegister->save($this->data);
-				$ar = $this->AttendanceRegister->findByEventId($event_id);
-			}
-
-			if ((isset($ar['Student'])) && (count($ar['Student']))) {
-				$students = $this->AttendanceRegister->query("
-					SELECT Student.*
-					FROM users Student
-					INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id
-					WHERE UAR.attendance_register_id = {$ar['AttendanceRegister']['id']}
-					ORDER BY Student.last_name, Student.first_name
-					");
+			if (!$ar) {
+				$event = $this->AttendanceRegister->Event->findById($event_id);
+				$this->set('students', false);
+				$this->set('subject', $this->AttendanceRegister->Activity->Subject->findById($event["Activity"]["subject_id"]));
+				$this->set('event', $event);
 			} else {
-				$students = $this->AttendanceRegister->query("
-					SELECT Student.*
-					FROM users Student
-					INNER JOIN registrations ON registrations.student_id = Student.id
-					WHERE registrations.activity_id = {$event['Event']['activity_id']}
-					AND registrations.group_id = {$event['Event']['group_id']}
-					ORDER BY Student.last_name, Student.first_name
-					");
-			}
+				$event = $this->AttendanceRegister->Event->findById($event_id);
+				if (!isset($ar['AttendanceRegister']['id'])) {
+					$this->data['AttendanceRegister'] = array('id' => null,
+						'event_id' => $event['Event']['id'],
+						'initial_hour' => $event['Event']['initial_hour'],
+						'final_hour' => $event['Event']['final_hour'],
+						'activity_id' => $event['Event']['activity_id'],
+						'group_id' => $event['Event']['group_id'],
+						'teacher_id' => $event['Event']['teacher_id'],
+						'teacher_2_id' => $event['Event']['teacher_2_id']);
 
-			$students_raw = array();
-			foreach ($students as $student) {
-				array_push($students_raw, $student['Student']);
-			}
+					$this->AttendanceRegister->save($this->data);
+					$ar = $this->AttendanceRegister->findByEventId($event_id);
+				}
 
-			$this->set('students', $students_raw);
-			$this->set('subject', $this->AttendanceRegister->Activity->Subject->findById($ar["Activity"]["subject_id"]));
-			$this->set('ar', $ar);
+				if ((isset($ar['Student'])) && (count($ar['Student']))) {
+					$students = $this->AttendanceRegister->query("
+						SELECT Student.*
+						FROM users Student
+						INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id
+						WHERE UAR.attendance_register_id = {$ar['AttendanceRegister']['id']}
+						ORDER BY Student.last_name, Student.first_name
+						");
+				} else {
+					$students = $this->AttendanceRegister->query("
+						SELECT Student.*
+						FROM users Student
+						INNER JOIN registrations ON registrations.student_id = Student.id
+						WHERE registrations.activity_id = {$event['Event']['activity_id']}
+						AND registrations.group_id = {$event['Event']['group_id']}
+						ORDER BY Student.last_name, Student.first_name
+						");
+				}
+
+				$students_raw = array();
+				foreach ($students as $student) {
+					array_push($students_raw, $student['Student']);
+				}
+
+				$this->set('students', $students_raw);
+				$this->set('subject', $this->AttendanceRegister->Activity->Subject->findById($ar["Activity"]["subject_id"]));
+				$this->set('ar', $ar);
+			}
 		}
 	}
 
