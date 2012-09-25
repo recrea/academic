@@ -54,8 +54,22 @@
 			</thead>
 			<tbody>
 				<?php foreach ($registers as $register): ?>
+				<?php
+					$initialHour = $register['AttendanceRegister']['initial_hour'];
+					$teacher1 = sprintf('%s %s', $register['Teacher']['first_name'], $register['Teacher']['last_name']);
+					$teacher2 = sprintf('%s %s', $register['Teacher_2']['first_name'], $register['Teacher_2']['last_name']);
+					$duration = $register['AttendanceRegister']['duration'];
+					$attendanceRegisterMissed = false;
+					if (!isset($register['AttendanceRegister']['id'])) {
+						$initialHour = $register['Event']['initial_hour'];
+						$teacher1 = sprintf('%s %s', $register['Teacher']['first_name'], $register['Teacher']['last_name']);
+						$teacher2 = sprintf('%s %s', $register['Teacher_2']['first_name'], $register['Teacher_2']['last_name']);
+						$duration = 0.0;
+						$attendanceRegisterMissed = true;
+					}
+				?>
 					<tr>
-						<td class="date"><?php echo date('d-m-Y H:i', strtotime($register['AttendanceRegister']['initial_hour'])) ?></td>
+						<td class="date"><?php echo date('d-m-Y H:i', strtotime($initialHour)) ?></td>
 						<td class="activity">
 							<?php echo $this->Html->link($register['Activity']['name'], array('controller' => 'activities', 'action' => 'view', $register['Activity']['id'])) ?>
 						</td>
@@ -63,9 +77,9 @@
 							<?php echo $this->Html->link($register['Group']['name'], array('controller' => 'groups', 'action' => 'view', $register['Group']['id'])) ?>
 						</td>
 
-						<td class="teacher"><?php echo sprintf('%s %s', $register['Teacher']['first_name'], $register['Teacher']['last_name']) ?></td>
-						<td class="teacher"><?php echo sprintf('%s %s', $register['Teacher_2']['first_name'], $register['Teacher_2']['last_name']) ?></td>
-						<td class="duration"><?php echo sprintf('%.2f', $register['AttendanceRegister']['duration']) ?></td>
+						<td class="teacher"><?php echo $teacher1 ?></td>
+						<td class="teacher"><?php echo $teacher2 ?></td>
+						<td class="duration"><?php echo $attendanceRegisterMissed ? '-' : sprintf('%.2f', $duration) ?></td>
 					</tr>
 				<?php endforeach; ?>
 			</tbody>

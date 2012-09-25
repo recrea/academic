@@ -145,26 +145,27 @@ class Subject extends AcademicModel {
 	 * a subject
 	 */
 	 function teachingHoursSummary($id = null) {
-		 $subject = $this->findById($id, array('Subject.id', 'Course.initial_date'));
+		 $subject = $this->findById($id, array('Subject.id', 'Course.initial_date', 'Course.final_date'));
 		 $groups = Set::extract('/Group/id', $subject);
 		 $activities = Set::extract('/Activity/id', $subject);
 
 		 $this->Group->bindModel(array('hasMany' => array('AttendanceRegister')));
-		 $registers = $this->Group->AttendanceRegister->find('all', array(
+		 $registers = $this->Group->AttendanceRegister->Event->find('all', array(
 			 'conditions' => array(
-				 'AttendanceRegister.group_id' => $groups,
-				 'AttendanceRegister.activity_id' => $activities,
-				 'AttendanceRegister.initial_hour < ' => sprintf('%s 23:59:59', date('Y-m-d')),
-				 'AttendanceRegister.initial_hour >= ' => sprintf('%s 00:00:00', strtotime($subject['Course']['initial_date'])),
+				 'Event.group_id' => $groups,
+				 'Event.activity_id' => $activities,
+				 'Event.initial_hour >= ' => date('Y-m-d 00:00:00', strtotime($subject['Course']['initial_date'])),
+				 'Event.final_hour <= ' => date('Y-m-d 23:59:59', strtotime($subject['Course']['final_date'])),
 			 ),
 			 'fields' => array(
+				 'Event.id', 'Event.initial_hour', 'Event.duration',
 				 'AttendanceRegister.id', 'AttendanceRegister.initial_hour', 'AttendanceRegister.duration',
 				 'Activity.id', 'Activity.name',
 				 'Group.id', 'Group.name',
 				 'Teacher.first_name', 'Teacher.last_name',
 				 'Teacher_2.first_name', 'Teacher_2.last_name',
 			 ),
-			 'order' => array('AttendanceRegister.initial_hour'),
+			 'order' => array('Event.initial_hour'),
 			 'recursive' => 0,
 		 ));
 		 return $registers;
