@@ -47,7 +47,8 @@
 					<th class="date">Fecha</th>
 					<th class="activity">Actividad</th>
 					<th class="group">Grupo</th>
-					<th class="teacher">Profesor</th>
+					<th class="teacher">Profesor 1</th>
+					<th class="teacher">Profesor 2</th>
 					<th class="duration">Duración</th>
 				</tr>
 			</thead>
@@ -63,6 +64,7 @@
 						</td>
 
 						<td class="teacher"><?php echo sprintf('%s %s', $register['Teacher']['first_name'], $register['Teacher']['last_name']) ?></td>
+						<td class="teacher"><?php echo sprintf('%s %s', $register['Teacher_2']['first_name'], $register['Teacher_2']['last_name']) ?></td>
 						<td class="duration"><?php echo sprintf('%.2f', $register['AttendanceRegister']['duration']) ?></td>
 					</tr>
 				<?php endforeach; ?>

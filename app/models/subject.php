@@ -162,6 +162,7 @@ class Subject extends AcademicModel {
 				 'Activity.id', 'Activity.name',
 				 'Group.id', 'Group.name',
 				 'Teacher.first_name', 'Teacher.last_name',
+				 'Teacher_2.first_name', 'Teacher_2.last_name',
 			 ),
 			 'order' => array('AttendanceRegister.initial_hour'),
 			 'recursive' => 0,

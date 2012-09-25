@@ -1,10 +1,21 @@
+div.view {
+	width: 95% !important;
+	border-left: none !important;
+}
+
+table.subject-statistics {
+	font-size: 0.9em;
+	width: 100%;
+}
+
 table.subject-statistics th.date,
 table.subject-statistics td.date {
-	width: 18%;
+	width: 14%;
 }
 
 table.subject-statistics th.duration {
 	text-align: center;
+	width: 7%;
 }
 table.subject-statistics td.duration {
 	text-align: right;
