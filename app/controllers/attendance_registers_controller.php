@@ -83,7 +83,7 @@ class AttendanceRegistersController extends AppController {
 
 				if ($this->AttendanceRegister->save($this->data)){
 					$this->Session->setFlash('El registro de impartición se ha creado correctamente.');
-					$this->redirect(array('action' => 'index'));
+					$this->redirect(array('action' => 'add'));
 				}
 				else {
 					$this->Session->setFlash('No se ha podido crear el registro de impartición. Por favor, revise que ha introducido todos los datos correctamente.');
