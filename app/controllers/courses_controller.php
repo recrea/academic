@@ -2,11 +2,11 @@
 class CoursesController extends AppController {
 	var $name = 'Courses';
 	var $paginate = array('limit' => 10, 'order' => array('Course.initial_date' => 'asc'));
-	
+
 	function index() {
 		$this->set('courses', $this->Course->find('all', array('order' => array('Course.initial_date'))));
 	}
-	
+
 	function add(){
 		if (!empty($this->data)){
 			if ($this->Course->save($this->data)){
@@ -15,13 +15,13 @@ class CoursesController extends AppController {
 			}
 		}
 	}
-	
+
 	function view($id = null) {
 		$this->Course->id = $id;
 		$this->set('course', $this->Course->read());
 		$this->set('friendly_name', $this->Course->friendly_name());
 	}
-	
+
 	function edit($id = null) {
 		$this->Course->id = $id;
 		if (empty($this->data)) {
@@ -113,7 +113,7 @@ class CoursesController extends AppController {
 		}
 	}
 
-	
+
 	function delete($id) {
 		$this->Course->delete($id);
 		$this->Session->setFlash('El curso ha sido eliminado correctamente');
@@ -199,19 +199,37 @@ class CoursesController extends AppController {
 		");
 		$this->set('teachers', $teachers);
 	}
-	
+
 	function stats_by_subject($course_id = null){
 	  $this->Course->id = $course_id;
 		$this->set('course', $this->Course->read());
 		$this->set('friendly_name', $this->Course->friendly_name());
-  		
+
+		/**
+		 * Candidate fix to subquery below
+		 *
+		 * LEFT JOIN (
+		 * 	SELECT `groups`.subject_id, `groups`.type, count(id) as total
+		 * 	FROM `groups`
+		 * 	WHERE `groups`.name NOT LIKE '%no me presento%'
+		 * 	GROUP BY `groups`.subject_id, `groups`.type
+		 * ) `Group` ON `Group`.subject_id = Activity.subject_id AND `Group`.type = Activity.type
+		 *
+		 * should be replaced by:
+		 *
+		 * LEFT JOIN (
+		 * 	SELECT `Event`.`activity_id` AS `activity_id`, COUNT(DISTINCT `TemporaryGroup`.`id`) AS `total`
+		 * 	FROM `events` `Event`
+		 * 	LEFT JOIN `groups` `TemporaryGroup` ON `TemporaryGroup`.`id` = `Event`.`group_id`
+		 * 	WHERE `TemporaryGroup`.`name` NOT LIKE '%%no me presento%%'
+		 *	GROUP BY `Event`.`activity_id`
+		 * ) `Group` ON `Group`.`activity_id` = `Activity`.`id`
+		 */
 	  $subjects = $this->Course->Subject->query("
 			SELECT subjects.id, subjects.code, subjects.name, SUM(activities.expected_duration) AS expected_hours, SUM(activities.programmed_duration) AS programmed_hours, SUM(activities.registered_duration) AS registered_hours, IFNULL(su.total,0) AS students
 			FROM subjects
 			LEFT JOIN (SELECT subjects_users.subject_id, IFNULL(count(distinct subjects_users.user_id), 0) as total FROM subjects_users INNER JOIN activities ON activities.subject_id = subjects_users.subject_id GROUP BY subjects_users.subject_id) su ON su.subject_id = subjects.id
 			INNER JOIN (
-		
-		
 				SELECT Activity.id, Activity.subject_id, Activity.duration AS expected_duration, SUM(IFNULL(Event.duration, 0)) / `Group`.total AS programmed_duration, IFNULL(SUM(AttendanceRegister.duration), 0) / `Group`.total AS registered_duration
 				FROM activities Activity
 				LEFT JOIN events Event ON Event.activity_id = Activity.id
@@ -227,23 +245,21 @@ class CoursesController extends AppController {
 					GROUP BY activity_id, event_id
 				) AttendanceRegister ON AttendanceRegister.activity_id = Activity.id AND AttendanceRegister.event_id = Event.id
 				GROUP BY Activity.id
-			
-			
-			)	activities ON activities.subject_id = subjects.id
+						)	activities ON activities.subject_id = subjects.id
 			WHERE subjects.course_id = {$course_id}
 			GROUP BY subjects.id
 			ORDER BY subjects.code ASC
 		");
-	  
+
 	  $this->set('subjects', $subjects);
 	}
-	
+
 	function export_stats_by_subject($course_id = null) {
 	  $date = Date('Y-m-d');
-	  
+
 	  $subjects = $this->Course->Subject->query("SELECT subjects.id, subjects.code, subjects.name, SUM(activities.expected_duration) AS expected_hours, SUM(activities.programmed_duration) AS programmed_hours, SUM(activities.registered_duration) AS registered_hours, IFNULL(su.total,0) AS students FROM subjects LEFT JOIN (SELECT subjects_users.subject_id, IFNULL(count(distinct subjects_users.user_id), 0) as total FROM subjects_users INNER JOIN activities ON activities.subject_id = subjects_users.subject_id GROUP BY subjects_users.subject_id) su ON su.subject_id = subjects.id INNER JOIN (SELECT Activity.id, Activity.subject_id, Activity.duration AS expected_duration, SUM(IFNULL(Event.duration, 0)) / `Group`.total AS programmed_duration, IFNULL(SUM(AttendanceRegister.duration), 0) / `Group`.total AS registered_duration FROM activities Activity LEFT JOIN events Event ON Event.activity_id = Activity.id LEFT JOIN (SELECT `groups`.subject_id, `groups`.type, count(id) as total FROM `groups` where `groups`.name NOT LIKE '%no me presento%' GROUP BY `groups`.subject_id, `groups`.type) `Group` ON `Group`.subject_id = Activity.subject_id AND `Group`.type = Activity.type LEFT JOIN (SELECT activity_id, event_id, SUM(duration) AS duration FROM attendance_registers GROUP BY activity_id, event_id) AttendanceRegister ON AttendanceRegister.activity_id = Activity.id AND AttendanceRegister.event_id = Event.id GROUP BY Activity.id) activities ON activities.subject_id = subjects.id WHERE subjects.course_id = {$course_id} GROUP BY subjects.id ORDER BY subjects.code ASC");
 	  $response = "Código;Nombre;Nº de matriculados;Horas planificadas;Horas programadas;Horas registradas\n";
-	  
+
 	  foreach($subjects as $subject):
 	    $expected = str_replace('.', ',', $subject[0]['expected_hours']);
 	    $programmed = str_replace('.', ',', $subject[0]['programmed_hours']);
@@ -256,23 +272,23 @@ class CoursesController extends AppController {
       $response .= ";{$registered}";
       $response .= "\n";
 	  endforeach;
-	  
+
 	  $this->set('response', $response);
 	  $this->set('filename', 'Estadisticas_asignatura.csv');
 
 	  $this->render('export_stats_by_subject', 'download');
 	}
-	
+
 	function _authorize() {
 		parent::_authorize();
-		
+
 		$administrator_actions = array('add', 'edit', 'delete');
 
 		$this->set('section', 'courses');
-		
+
 		if ((array_search($this->params['action'], $administrator_actions) !== false) && ($this->Auth->user('type') != "Administrador") && ($auth->user('type') != "Administrativo"))
 			return false;
-	
+
 		return true;
 	}
 }
