@@ -131,11 +131,13 @@ class Subject extends AcademicModel {
 			INNER JOIN `users` `Teacher` ON `Teacher`.`id` = `AttendanceRegister`.`teacher_id`
 			WHERE `AttendanceRegister`.`group_id` IN (%s)
 			AND `AttendanceRegister`.`activity_id` IN (%s)
-			AND `AttendanceRegister`.`initial_hour` < '2012-09-23 23:59:59'
-			AND `AttendanceRegister`.`initial_hour` >= '2011-07-18 00:00:00'
-			AND `AttendanceRegister`.`initial_hour` <= '2012-07-20 23:59:59'
+			AND `AttendanceRegister`.`initial_hour` >= '%s'
+			AND `AttendanceRegister`.`initial_hour` <= '%s'
 			GROUP BY `Activity`.`id`
-			ORDER BY `AttendanceRegister`.`initial_hour` ASC", implode(',', $groups), implode(',', $activities))
+			ORDER BY `AttendanceRegister`.`initial_hour` ASC",
+				implode(',', $groups), implode(',', $activities),
+				date('Y-m-d 00:00:00', strtotime($subject['Course']['initial_date'])),
+				date('Y-m-d 23:59:59', strtotime($subject['Course']['final_date'])))
 		);
 		return $registers;
 	}
