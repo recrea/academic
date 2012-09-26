@@ -47,7 +47,7 @@
 		<div class="input">
 			<dl>
 				<dt>
-					<label for="AttendanceRegisterInitialHour" style="display:inline">Hora de incio</label>
+					<label for="AttendanceRegisterInitialHour" style="display:inline">Hora de inicio</label>
 				</dt>
 				<dd>
 					<?php echo $form->hour('initial_hour', true, "07", array('timeFormat' => '24')); ?>
