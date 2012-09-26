@@ -54,17 +54,20 @@
 				<?php foreach ($registers as $register): ?>
 				<?php
 					$initialHour = $register['AttendanceRegister']['initial_hour'];
-					$teacher1 = sprintf('%s %s', $register['Teacher']['first_name'], $register['Teacher']['last_name']);
-					$teacher2 = sprintf('%s %s', $register['Teacher_2']['first_name'], $register['Teacher_2']['last_name']);
 					$duration = $register['AttendanceRegister']['duration'];
 					$attendanceRegisterMissed = false;
 					if (!isset($register['AttendanceRegister']['id'])) {
 						$initialHour = $register['Event']['initial_hour'];
-						$teacher1 = sprintf('%s %s', $register['Teacher']['first_name'], $register['Teacher']['last_name']);
-						$teacher2 = sprintf('%s %s', $register['Teacher_2']['first_name'], $register['Teacher_2']['last_name']);
 						$duration = 0.0;
 						$attendanceRegisterMissed = true;
 					}
+
+					$teacher1 = trim(sprintf('%s %s', $register['Teacher']['first_name'], $register['Teacher']['last_name']));
+					if ($attendanceRegisterMissed || empty($teacher1)) {
+						$teacher1 = sprintf('%s %s', $register['OriginalTeacher']['first_name'], $register['OriginalTeacher']['last_name']);
+					}
+
+					$teacher2 = trim(sprintf('%s %s', $register['Teacher_2']['first_name'], $register['Teacher_2']['last_name']));
 				?>
 					<tr>
 						<td class="date"><?php echo date('d-m-Y H:i', strtotime($initialHour)) ?></td>

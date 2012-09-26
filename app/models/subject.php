@@ -153,7 +153,7 @@ class Subject extends AcademicModel {
 		 $activities = Set::extract('/Activity/id', $subject);
 
 		 $this->Group->bindModel(array('hasMany' => array('AttendanceRegister')));
-		 $registers = $this->Group->AttendanceRegister->Event->find('all', array(
+		 $events = $this->Group->AttendanceRegister->Event->find('all', array(
 			 'conditions' => array(
 				 'Event.group_id' => $groups,
 				 'Event.activity_id' => $activities,
@@ -171,6 +171,25 @@ class Subject extends AcademicModel {
 			 'order' => array('Event.initial_hour'),
 			 'recursive' => 0,
 		 ));
+
+		 $registers = array();
+		 foreach ($events as $event) {
+			 $this->Group->bindModel(array('hasMany' => array('AttendanceRegister')));
+			 $teachers = $this->Group->AttendanceRegister->find('first', array(
+				 'conditions' => array('AttendanceRegister.id' => $event['AttendanceRegister']['id']),
+				 'fields' => array(
+					 'AttendanceRegister.id',
+					 'Teacher.first_name', 'Teacher.last_name', 'Teacher_2.first_name', 'Teacher_2.last_name',
+				 ),
+				 'recursive' => 0,
+			 ));
+
+			 $event['OriginalTeacher'] = $event['Teacher'];
+			 $event['OriginalTeacher_2'] = $event['Teacher_2'];
+			 $event['Teacher'] = $teachers['Teacher'];
+			 $event['Teacher_2'] = $teachers['Teacher_2'];
+			 $registers[] = $event;
+		 }
 		 return $registers;
 	 }
 }
