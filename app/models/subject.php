@@ -123,22 +123,23 @@ class Subject extends AcademicModel {
 			FROM `attendance_registers` `AttendanceRegister`
 			INNER JOIN `activities` `Activity` ON `Activity`.`id` = `AttendanceRegister`.`activity_id`
 			LEFT JOIN (
-				SELECT `TemporaryGroup`.`subject_id`, `TemporaryGroup`.`type`, count(`TemporaryGroup`.`id`) as `total`
-				FROM `groups` `TemporaryGroup`
+				SELECT `Event`.`activity_id` AS `activity_id`, COUNT(DISTINCT `TemporaryGroup`.`id`) AS `total`
+				FROM `events` `Event`
+				LEFT JOIN `groups` `TemporaryGroup` ON `TemporaryGroup`.`id` = `Event`.`group_id`
 				WHERE `TemporaryGroup`.`name` NOT LIKE '%%no me presento%%'
-				GROUP BY `TemporaryGroup`.`subject_id`, `TemporaryGroup`.`type`
-			) `Group` ON `Group`.`subject_id` = `Activity`.`subject_id` AND `Group`.`type` = `Activity`.`type`
+				GROUP BY `Event`.`activity_id`
+			) `Group` ON `Group`.`activity_id` = `Activity`.`id`
 			INNER JOIN `users` `Teacher` ON `Teacher`.`id` = `AttendanceRegister`.`teacher_id`
 			WHERE `AttendanceRegister`.`group_id` IN (%s)
 			AND `AttendanceRegister`.`activity_id` IN (%s)
 			AND `AttendanceRegister`.`initial_hour` >= '%s'
 			AND `AttendanceRegister`.`initial_hour` <= '%s'
 			GROUP BY `Activity`.`id`
-			ORDER BY `AttendanceRegister`.`initial_hour` ASC",
+			ORDER BY `Activity`.`id` ASC",
 				implode(',', $groups), implode(',', $activities),
 				date('Y-m-d 00:00:00', strtotime($subject['Course']['initial_date'])),
-				date('Y-m-d 23:59:59', strtotime($subject['Course']['final_date'])))
-		);
+				date('Y-m-d 23:59:59', strtotime($subject['Course']['final_date']))
+		));
 		return $registers;
 	}
 

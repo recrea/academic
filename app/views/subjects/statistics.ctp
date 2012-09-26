@@ -14,7 +14,6 @@
 		<table class="subject-statistics">
 			<thead>
 				<tr>
-					<th class="date">Fecha</th>
 					<th class="activity">Actividad</th>
 					<th class="duration">Duración</th>
 				</tr>
@@ -24,7 +23,6 @@
 				<?php foreach ($activities as $activity): ?>
 					<?php $totalDuration += $activity[0]['activity_total'] ?>
 					<tr>
-						<td class="date"><?php echo date('d-m-Y H:i', strtotime($activity['AttendanceRegister']['initial_hour'])) ?></td>
 						<td class="activity">
 							<?php echo $this->Html->link($activity['Activity']['name'], array('controller' => 'activities', 'action' => 'view', $activity['Activity']['id'])) ?>
 						</td>
@@ -32,7 +30,7 @@
 					</tr>
 				<?php endforeach; ?>
 				<tr>
-					<td class="duration total-duration" colspan="2">TOTAL:</td>
+					<td class="duration total-duration" colspan="1">TOTAL:</td>
 					<td class="duration total-duration"><?php echo sprintf('%.2f', $totalDuration) ?></td>
 				</tr>
 			</tbody>
