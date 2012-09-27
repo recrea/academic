@@ -143,5 +143,8 @@
 		}
 
 			$("input#teacher").autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: formatItem}).result(function(event, item){ $("input#AttendanceRegisterTeacherId").val(item[1]); });
+
+	  	$("input#teacher_2").autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: formatItem}).result(function(event, item){ $("input#AttendanceRegisterTeacher_2Id").val(item[1]); });
+
 	});
 </script>
