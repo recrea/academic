@@ -205,26 +205,6 @@ class CoursesController extends AppController {
 		$this->set('course', $this->Course->read());
 		$this->set('friendly_name', $this->Course->friendly_name());
 
-		/**
-		 * Candidate fix to subquery below
-		 *
-		 * LEFT JOIN (
-		 * 	SELECT `groups`.subject_id, `groups`.type, count(id) as total
-		 * 	FROM `groups`
-		 * 	WHERE `groups`.name NOT LIKE '%no me presento%'
-		 * 	GROUP BY `groups`.subject_id, `groups`.type
-		 * ) `Group` ON `Group`.subject_id = Activity.subject_id AND `Group`.type = Activity.type
-		 *
-		 * should be replaced by:
-		 *
-		 * LEFT JOIN (
-		 * 	SELECT `Event`.`activity_id` AS `activity_id`, COUNT(DISTINCT `TemporaryGroup`.`id`) AS `total`
-		 * 	FROM `events` `Event`
-		 * 	LEFT JOIN `groups` `TemporaryGroup` ON `TemporaryGroup`.`id` = `Event`.`group_id`
-		 * 	WHERE `TemporaryGroup`.`name` NOT LIKE '%%no me presento%%'
-		 *	GROUP BY `Event`.`activity_id`
-		 * ) `Group` ON `Group`.`activity_id` = `Activity`.`id`
-		 */
 	  $subjects = $this->Course->Subject->query("
 			SELECT subjects.id, subjects.code, subjects.name, SUM(activities.expected_duration) AS expected_hours, SUM(activities.programmed_duration) AS programmed_hours, SUM(activities.registered_duration) AS registered_hours, IFNULL(su.total,0) AS students
 			FROM subjects
@@ -234,11 +214,12 @@ class CoursesController extends AppController {
 				FROM activities Activity
 				LEFT JOIN events Event ON Event.activity_id = Activity.id
 				LEFT JOIN (
-					SELECT `groups`.subject_id, `groups`.type, count(id) as total
-					FROM `groups`
-					WHERE `groups`.name NOT LIKE '%no me presento%'
-					GROUP BY `groups`.subject_id, `groups`.type
-				) `Group` ON `Group`.subject_id = Activity.subject_id AND `Group`.type = Activity.type
+					SELECT `Event`.`activity_id` AS `activity_id`, COUNT(DISTINCT `TemporaryGroup`.`id`) AS `total`
+					FROM `events` `Event`
+					LEFT JOIN `groups` `TemporaryGroup` ON `TemporaryGroup`.`id` = `Event`.`group_id`
+					WHERE `TemporaryGroup`.`name` NOT LIKE '%%no me presento%%'
+					GROUP BY `Event`.`activity_id`
+				) `Group` ON `Group`.`activity_id` = `Activity`.`id`
 				LEFT JOIN (
 					SELECT activity_id, event_id, SUM(duration) AS duration
 					FROM attendance_registers
