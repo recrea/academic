@@ -12,11 +12,11 @@ class AttendanceRegistersController extends AppController {
 	/**
 	 * Shows a list of attendance registers
 	 */
-	function index($teacher_id = -1, $activity_id = -1, $date = -1) {
+	function index($teacher_id = -1, $activity_id = -1, $date = -1, $id = -1) {
 		if (!empty($this->data)) {
-			$conditions = $this->_get_search_conditions($this->data['AttendanceRegister']['activity_id'], $this->data['AttendanceRegister']['teacher_id'], $this->data['AttendanceRegister']['date']);
+			$conditions = $this->_get_search_conditions($this->data['AttendanceRegister']['activity_id'], $this->data['AttendanceRegister']['teacher_id'], $this->data['AttendanceRegister']['date'], $this->data['AttendanceRegister']['id']);
 			$registers = $this->paginate('AttendanceRegister', array($conditions));
-		} elseif (($teacher_id != -1) || ($activity_id != -1) || ($date != -1)) {
+		} elseif (($teacher_id != -1) || ($activity_id != -1) || ($date != -1) || ($id != -1)) {
 			if ($activity_id == -1)
 				$activity_id = null;
 
@@ -26,17 +26,20 @@ class AttendanceRegistersController extends AppController {
 			if ($date == -1)
 				$date = null;
 
-			$conditions = $this->_get_search_conditions($activity_id, $teacher_id, $date);
+			if ($id == -1)
+				$id = null;
+
+			$conditions = $this->_get_search_conditions($activity_id, $teacher_id, $date, $id);
 			$registers = $this->paginate('AttendanceRegister', array($conditions));
-		} else{
+		} else {
 			$registers = $this->paginate('AttendanceRegister', array('AttendanceRegister.duration > 0'));
 		}
 
 		$this->set('registers', $registers);
 	}
 
-	function _get_search_conditions($activity_id, $teacher_id, $date){
-		$conditions = "AttendanceRegister.duration > 0";
+	function _get_search_conditions($activity_id, $teacher_id, $date, $id){
+		$conditions = " AttendanceRegister.duration > 0";
 		if ($activity_id != null){
 			$activity = $this->AttendanceRegister->Activity->findById($activity_id);
 			$this->set('activity', $activity);
@@ -55,6 +58,9 @@ class AttendanceRegistersController extends AppController {
 			$conditions .= " AND DATE_FORMAT(AttendanceRegister.initial_hour, '%Y-%m-%d') = '{$date}'";
 		}
 
+		if ($id != null) {
+			$conditions .= " AND AttendanceRegister.id = {$id}";
+		}
 		return $conditions;
 	}
 
@@ -149,6 +155,20 @@ class AttendanceRegistersController extends AppController {
 			$this->set('students', $students);
 			$this->set('subject', $subject);
 		}
+	}
+
+	/**
+	 * Returns a list of attendance registers filtered by barcode
+	 * @version 2012-09-27
+	 */
+	function find_by_barcode() {
+		App::import('Sanitize');
+		$q = '%'.Sanitize::escape($this->params['url']['q']).'%';
+		$attendanceRegisters = $this->AttendanceRegister->find('all', array(
+			'conditions' => array('AttendanceRegister.id LIKE' => $q),
+			'recursive' => -1,
+		));
+		$this->set('attendanceRegisters', $attendanceRegisters);
 	}
 
 	/**
