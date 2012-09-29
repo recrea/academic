@@ -66,11 +66,23 @@
 					if ($attendanceRegisterMissed || empty($teacher1)) {
 						$teacher1 = sprintf('%s %s', $register['OriginalTeacher']['first_name'], $register['OriginalTeacher']['last_name']);
 					}
-
 					$teacher2 = trim(sprintf('%s %s', $register['Teacher_2']['first_name'], $register['Teacher_2']['last_name']));
 				?>
 					<tr>
-						<td class="date"><?php echo date('d-m-Y H:i', strtotime($initialHour)) ?></td>
+						<td class="date">
+							<?php
+								if ($this->Session->read('Auth.User.type') !== "Administrador") {
+									echo date('d-m-Y H:i', strtotime($initialHour));
+								} else {
+									$action = $attendanceRegisterMissed ? 'add_by_event' : 'edit';
+									$id = $attendanceRegisterMissed ? $register['Event']['id'] : $register['AttendanceRegister']['id'];
+									echo $this->Html->link(date('d-m-Y H:i', strtotime($initialHour)), array(
+										'controller' => 'attendance_registers',
+										'action' => $action,
+										$id,
+									));
+								}
+							?></td>
 						<td class="activity">
 							<?php echo $this->Html->link($register['Activity']['name'], array('controller' => 'activities', 'action' => 'view', $register['Activity']['id'])) ?>
 						</td>

@@ -65,39 +65,147 @@ class AttendanceRegistersController extends AppController {
 	}
 
 	/**
+	 * Adds an attendance register using event information
+	 *
+	 * @since 2012-09-28
+	 */
+	function add_by_event($event_id = null) {
+		$this->AttendanceRegister->Event->id = $event_id;
+		if (!$this->AttendanceRegister->Event->exists()) {
+			$this->Session->setFlash('No se puede crear un registro de impartición sin un evento válido.');
+			$this->redirect($this->referer());
+		}
+		$event = $this->AttendanceRegister->Event->findById($event_id);
+
+		// Set fixed values
+		$subject = $this->AttendanceRegister->Activity->Subject->findById($event['Activity']['subject_id']);
+		$this->set(array(
+			'activity' => $event['Activity']['name'],
+			'subject' => $subject['Subject']['name'],
+			)
+		);
+
+		if ($this->data) {
+			// If teacher is missing, assign the one programmed in event
+			if (!(isset($this->data['AttendanceRegister']['teacher_id']))) {
+				$this->data['AttendanceRegister']['teacher_id'] = $ar["Event"]["teacher_id"];
+			}
+
+			// Cleanup list of students
+			if (isset($this->data['AttendanceRegister']['students'])) {
+				$selected_students = array_unique(array_keys($this->data['AttendanceRegister']['students']));
+				$this->data['Student']['Student'] = $selected_students;
+				$this->data['AttendanceRegister']['num_students'] = count($selected_students);
+				unset($this->data['AttendanceRegister']['students']);
+			}
+
+			// Cleanup dates
+			$this->data['AttendanceRegister']['initial_hour'] = $this->data['AttendanceRegister']['initial_hour']['hour'].":".$this->data['AttendanceRegister']['initial_hour']['minute'];
+			$this->data['AttendanceRegister']['final_hour'] = $this->data['AttendanceRegister']['final_hour']['hour'].":".$this->data['AttendanceRegister']['final_hour']['minute'];
+
+			if ($this->AttendanceRegister->save($this->data)) {
+				$this->Session->setFlash('El registro de impartición se ha creado correctamente.');
+				$this->redirect(array('action' => 'add'));
+			}
+			else {
+				// Recover information in case of error
+				$teacher = $this->AttendanceRegister->Teacher->findById($this->data['AttendanceRegister']['teacher_id']);
+				$teacher2 = $this->AttendanceRegister->Teacher_2->findById($this->data['AttendanceRegister']['teacher_2_id']);
+				$students = array();
+				foreach ($this->data['Student']['Student'] as $id) {
+					$students[] = $this->AttendanceRegister->Student->find('first', array(
+						'conditions' => array('Student.id' => $id),
+						'recursive' => -1,
+					));
+				}
+				$this->set(array(
+					'teacher' => sprintf('%s %s', $teacher['Teacher']['first_name'], $teacher['Teacher']['last_name']),
+					'teacher2' => sprintf('%s %s', $teacher2['Teacher_2']['first_name'], $teacher2['Teacher_2']['last_name']),
+					'students' => $students,
+					)
+				);
+
+				$initial_hour = date('Y-m-d', strtotime($event['Event']['initial_hour']));
+				$final_hour = date('Y-m-d', strtotime($event['Event']['final_hour']));
+				$this->data['AttendanceRegister']['initial_hour'] = sprintf('%s %s', $initial_hour, $this->data['AttendanceRegister']['initial_hour']);
+				$this->data['AttendanceRegister']['final_hour'] = sprintf('%s %s', $final_hour, $this->data['AttendanceRegister']['final_hour']);
+
+				$this->Session->setFlash('No se pudo crear el registro de impartición. Por favor, revisa que has introducido todos los datos correctamente.');
+			}
+		} else {
+			$students = $this->AttendanceRegister->Event->findRegisteredStudents($event_id);
+			$this->set(array(
+				'teacher' => sprintf('%s %s', $event['Teacher']['first_name'], $event['Teacher']['last_name']),
+				'teacher2' => sprintf('%s %s', $event['Teacher_2']['first_name'], $event['Teacher_2']['last_name']),
+				'students' => $students,
+				)
+			);
+
+			$this->data['AttendanceRegister'] = array(
+				'initial_hour' => $event['Event']['initial_hour'],
+				'final_hour' => $event['Event']['final_hour'],
+				'teacher_id' => $event['Event']['teacher_id'],
+				'teacher_2_id' => $event['Event']['teacher_2_id'],
+				'activity_id' => $event['Event']['activity_id'],
+				'group_id' => $event['Event']['group_id'],
+				'num_students' => count($students),
+				'event_id' => $event['Event']['id'],
+			);
+		}
+	}
+
+	/**
 	 * Adds an attendance register with a possibly modified list of students
 	 *
 	 * @since 2012-05-18
 	 */
-	function add(){
-		if (!empty($this->data)){
+	function add() {
+		if (!empty($this->data)) {
 			list($id) = sscanf($this->data['AttendanceRegister']['id'], "%d");
 			if ($id != null) {
 				$ar = $this->AttendanceRegister->read(null, $id);
 
+				// Recover information in case of error
+				$students = array();
+				foreach ($this->data['AttendanceRegister']['students'] as $student_id => $present) {
+					$students[] = $this->AttendanceRegister->Student->find('first', array(
+						'conditions' => array('id' => $student_id),
+						'recursive' => -1,
+					));
+				}
+
+				$subject = $this->AttendanceRegister->Activity->Subject->findById($ar['Activity']['subject_id']);
+				$this->set(array(
+					'subject' => $subject['Subject']['name'],
+					'activity' => $ar['Activity']['name'],
+					'students' => $students,
+					)
+				);
+
+				// Pre-process form data
 				$this->data['AttendanceRegister']['initial_hour'] = $this->data['AttendanceRegister']['initial_hour']['hour'].":".$this->data['AttendanceRegister']['initial_hour']['minute'];
 				$this->data['AttendanceRegister']['final_hour'] = $this->data['AttendanceRegister']['final_hour']['hour'].":".$this->data['AttendanceRegister']['final_hour']['minute'];
 
-				if (!(isset($this->data['AttendanceRegister']['teacher_id'])))
+				if (!(isset($this->data['AttendanceRegister']['teacher_id']))) {
 					$this->data['AttendanceRegister']['teacher_id'] = $ar["Event"]["teacher_id"];
+				}
 
-				if (isset($this->data['AttendanceRegister']['students'])){
-					$students = array_unique(array_keys($this->data['AttendanceRegister']['students']));
-					$this->data['Student']['Student'] = $students;
+				if (isset($this->data['AttendanceRegister']['students'])) {
+					$selected_students = array_unique(array_keys($this->data['AttendanceRegister']['students']));
+					$this->data['Student']['Student'] = $selected_students;
+					$this->data['AttendanceRegister']['num_students'] = count($selected_students);
 					unset($this->data['AttendanceRegister']['students']);
 				}
 
-				if ($this->AttendanceRegister->save($this->data)){
+				if ($this->AttendanceRegister->save($this->data)) {
 					$this->Session->setFlash('El registro de impartición se ha creado correctamente.');
 					$this->redirect(array('action' => 'add'));
 				}
 				else {
-					$this->Session->setFlash('No se ha podido crear el registro de impartición. Por favor, revise que ha introducido todos los datos correctamente.');
-					$this->redirect(array('action' => 'index'));
+					$this->Session->setFlash('No se pudo crear el registro de impartición. Por favor, revisa que has introducido todos los datos correctamente.');
 				}
 			} else {
 				$this->Session->setFlash('No se puede crear un registro de impartición sin especificar su código de barras.');
-				$this->redirect(array('action' => 'index'));
 			}
 		}
 	}

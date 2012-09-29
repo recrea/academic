@@ -2,34 +2,19 @@
 <?php $html->addCrumb('Crear registro de impartición', '/attendance_registers/add'); ?>
 
 <h1>Crear registro de impartición</h1>
-<?php echo $this->Form->create('AttendanceRegister') ?>
+<?php echo $this->Form->create('AttendanceRegister', array(
+	'action' => sprintf('add_by_event/%d', $this->data['AttendanceRegister']['event_id']),
+)) ?>
+	<?php echo $this->Form->hidden('event_id') ?>
 	<fieldset>
 	<legend>Datos generales</legend>
-		<div class="input">
-		  <dl>
-		    <dt>
-					<label for="id">Código de barras</label>
-				</dt>
-		    <dd>
-					<?php echo $this->Form->input('id', array(
-						'type' => 'textarea',
-						'value' => trim($this->data['AttendanceRegister']['id']),
-						'rows' => 1,
-						'div' => false,
-						'label' => false,
-						'onchange' => 'getRegisterInfo()',
-					)) ?>
-				</dd>
-		  </dl>
-		</div>
-
 		<div class="input">
 			<dl>
 				<dt>
 					<label for="subject">Asignatura</label>
 				</dt>
 				<dd>
-					<input type="input" id="subject" readonly class="disabled" />
+					<input type="input" id="subject" readonly class="disabled" value="<?php echo $subject ?>" />
 				</dd>
 			</dl>
 		</div>
@@ -40,7 +25,9 @@
 					<label for="activity">Actividad</label>
 				</dt>
 				<dd>
-					<input type="input" id="activity" readonly class="disabled" />
+					<input type="input" id="activity" readonly class="disabled" value="<?php echo $activity ?>" />
+					<?php echo $this->Form->hidden('activity_id')?>
+					<?php echo $this->Form->hidden('group_id')?>
 				</dd>
 			</dl>
 		</div>
@@ -48,7 +35,7 @@
 		<div class="input">
 			<dl>
 				<dt><label for="teacher">Profesor</label></dt>
-				<dd><input type="input" id="teacher" /></dd>
+				<dd><input type="input" id="teacher" value="<?php echo $teacher ?>" /></dd>
 				<?php echo $this->Form->hidden('teacher_id')?>
 			</dl>
 		</div>
@@ -56,7 +43,7 @@
 		<div class="input">
 			<dl>
 				<dt><label for="teacher">2º Profesor</label></dt>
-				<dd><input type="input" id="teacher_2" /></dd>
+				<dd><input type="input" id="teacher_2" value="<?php echo $teacher2 ?>" /></dd>
 				<?php echo $this->Form->hidden('teacher_2_id')?>
 			</dl>
 		</div>
@@ -77,7 +64,6 @@
 				'value' => isset($initial_date) ? $initial_date->format('d-m-Y') : '',
 			));
 		?>
-
 		<div class="input">
 			<dl>
 				<dt>
@@ -143,6 +129,14 @@
 				</tr>
 			</tfoot>
 			<tbody id="students">
+				<?php if (count($students)) {
+					$i = 0;
+					foreach($students as $student) {
+						echo "<tr id='row_{$i}'><td onclick='toogleCheckBox({$student['Student']['id']})'>{$student['Student']['first_name']} {$student['Student']['last_name']}</td><td style='text-align:center'><input type='checkbox' id='students_{$student['Student']['id']}' name='data[AttendanceRegister][students][{$student['Student']['id']}]' value='1' checked /></td></tr>";
+						$i++;
+					}
+				}
+				?>
 			</tbody>
 		</table>
 	</fieldset>
@@ -152,15 +146,6 @@
 	$(function() {
 		<?php echo $dateHelper->datepicker("#AttendanceRegisterDate") ?>
 	});
-
-	function getRegisterInfo(){
-		$.ajax({
-			type: "GET",
-			asynchronous: false,
-			url: "<?php echo PATH ?>/attendance_registers/get_register_info/" + $('#AttendanceRegisterId').val(),
-			dataType: 'script'
-		});
-	}
 
 	function toogleCheckBox(id){
 		$('#students_' + id).attr('checked', !($('#students_' + id).attr('checked')));

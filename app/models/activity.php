@@ -3,7 +3,11 @@ require_once('models/academic_model.php');
 
 class Activity extends AcademicModel {
 	var $name = "Activity";
+
 	var $belongsTo = 'Subject';
+
+	var $hasMany = array('Registration');
+
 	var $validate = array(
 		'name' => array(
 			'rule' => 'notEmpty',
@@ -13,7 +17,7 @@ class Activity extends AcademicModel {
 		'type' => array(
 			'rule' => 'notEmpty',
 			'required' => true,
-			'message' => 'Debe especificar un tipo para la actividad' 
+			'message' => 'Debe especificar un tipo para la actividad'
 			),
 		'duration' => array(
 			'notEmpty' => array(
@@ -33,7 +37,7 @@ class Activity extends AcademicModel {
 
 	function _exists($id){
 		$activity = $this->findById($id);
-		
+
 		return ($activity != null);
 	}
 }
