@@ -129,7 +129,7 @@
 			},
 			buttonText: {today: 'hoy', month: 'mes', week: 'semana', day: 'día'},
 			eventClick: function(event, jsEvent, view) {
-				id = event.id.match(/\d/);
+				id = event.id.match(/\d+/);
 				$.ajax({
 					cache: false,
 					type: "GET",
