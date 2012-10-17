@@ -71,8 +71,7 @@
 		}
 		
 		function view($id = null){
-			$this->Booking->id = $id;
-			$this->set('booking', $this->Booking->read());
+			$this->set('booking', $this->Booking->findById($id));
 		}
 		
 		function delete($id=null) {
