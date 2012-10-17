@@ -1,16 +1,16 @@
 <?php $html->addCrumb('Reservas', '/bookings'); ?>
 
 <script type="text/javascript">
-	
+
 	var currentEvent = null;
-	
+
 	function toDateString(date){
 		var day = date.getDate();
 		var month = date.getMonth() + 1;
 		var year = date.getFullYear();
 		var hour = date.getHours();
 		var minute = date.getMinutes();
-		
+
 		if (day < 10)
 			day = "0" + day;
 		if (month < 10)
@@ -19,37 +19,37 @@
 			hour = "0" + hour;
 		if (minute < 10)
 			minute = "0" + minute;
-		
+
 		return year + "-" + month + "-" + day + " " + hour + ":" + minute + ":00";
 	}
-	
+
 	function addBooking() {
 		var initial_hour = new Date($("#date").val());
 		var final_hour = new Date($("#date").val());
 		var new_event;
-		
+
 		initial_hour.setHours($('#BookingInitialHourHour').val());
 		initial_hour.setMinutes($('#BookingInitialHourMin').val());
 		final_hour.setHours($('#BookingFinalHourHour').val());
 		final_hour.setMinutes($('#BookingFinalHourMin').val());
-		
+
 		$.ajax({
 			cache: false,
-			type: "POST", 
+			type: "POST",
 			data: {'data[Booking][reason]': $('#BookingReason').val(), 'data[Booking][required_equipment]': $('#BookingRequiredEquipment').val(), 'data[Booking][initial_hour]': initial_hour.toString(), 'data[Booking][final_hour]': final_hour.toString(), 'data[Booking][classroom_id]': $('#classrooms').val()},
 			url: "<?php echo PATH ?>/bookings/add/" + $('#BookingFinishedAt').val() + "/" + $('#Frequency').val(),
 			asynchronous: false,
-			dataType: 'script', 
+			dataType: 'script',
 			success: function(data){
 				$('#form').dialog('close');
 			}
 		});
 	}
-	
+
 	function deleteBooking(id, parent_id){
 		if (parent_id == '')
 			confirmated = confirm("¿Está seguro de que desea eliminar esta reserva? Al eliminarla se eliminarán también todos las reservas de la misma serie.");
-		else 
+		else
 			confirmated = confirm("¿Está seguro de que desea eliminar esta reserva?");
 		if (confirmated){
 			$.ajax({
@@ -60,14 +60,14 @@
 			});
 		}
 	}
-	
+
 	function reset_form(){
 		$('#BookingReason').val("")
 		$('#BookingRequiredEquipment').val("");
 		$('#finished_at').val("");
 		$('#finish_date').hide();
 	}
-	
+
 	$(document).ready(function() {
 		$('#calendar').fullCalendar({
 			header: {
@@ -102,7 +102,7 @@
 					id = event.id.match(/\d/);
 					$.ajax({
 						cache: false,
-						type: "GET", 
+						type: "GET",
 						url: "<?php echo PATH ?>/bookings/update/" + id + "/" + dayDelta + "/" + minuteDelta + "/1",
 						success: function(data){
 							if (data == "false"){
@@ -110,7 +110,7 @@
 								$('#notice').removeClass('success');
 								$('#notice').addClass('error');
 								$('#notice').html("No ha sido posible actualizar la reserva porque coincide con una actividad académica u otra reserva.");
-							} else { 
+							} else {
 								if (data == "notAllowed") {
 									revertFunc();
 									$('#notice').removeClass('success');
@@ -130,18 +130,23 @@
 			buttonText: {today: 'hoy', month: 'mes', week: 'semana', day: 'día'},
 			eventClick: function(event, jsEvent, view) {
 				id = event.id.match(/\d+/);
+				var url;
+				if (event.className == 'booking')
+					url = "<?php echo PATH ?>/bookings/view/";
+				else
+					url = "<?php echo PATH ?>/events/view/";
 				$.ajax({
 					cache: false,
 					type: "GET",
-					url: "<?php echo PATH ?>/bookings/view/" + id, 
+					url: url + id,
 					success: function(data) {
 						if (data == "false")
 							alert("Usted no tiene permisos para editar esta reserva");
 						else{
 							$('#edit_form').html(data);
 							$('#edit_form').dialog({
-								width:500, 
-								position:'top', 
+								width:500,
+								position:'top',
 								close: function(event, ui) {
 									if (currentEvent != null){
 										$('#calendar').fullCalendar('removeEventSource', currentEvent);
@@ -164,7 +169,7 @@
 					id = event.id.match(/\d/);
 					$.ajax({
 						cache: false,
-						type: "GET", 
+						type: "GET",
 						url: "<?php echo PATH ?>/bookings/update/" + id + "/" + dayDelta + "/" + minuteDelta,
 						success: function(data){
 							if (data == "false"){
@@ -185,21 +190,21 @@
 									$('#notice').html("La reserva se ha actualizado correctamente.");
 								}
 							}
-						
+
 						}
 					});
-				} 
+				}
 			},
 			eventMouseover: function(event, jsEvent, view) {
 				if (event.className == 'booking')
 					url = "<?php echo PATH ?>/bookings/view/";
 				else
 					url = "<?php echo PATH ?>/events/view/";
-				
+
 				id = event.id.match(/\d+/);
 				$.ajax({
 					cache: false,
-					type: "GET", 
+					type: "GET",
 					url: url + id,
 					asynchronous: false,
 					success: function(data) {
@@ -207,9 +212,9 @@
 						$('#BookingDetails').html(data);
 					}
 				});
-				
-				
-				
+
+
+
 				$(this).tooltip({
 					delay: 500,
 					bodyHandler: function() {
@@ -217,18 +222,18 @@
 					},
 					showURL: false
 				});
-				
+
 			},
 			dayClick: function(date, allDay, jsEvent, view){
 				var hour, minute;
-				
+
 				if ($('#classrooms').val() == "")
 					alert("Debe seleccionar un aula antes de comenzar a programar actividades");
 				else{
 					reset_form();
 					hour = date.getHours();
 					minute = date.getMinutes();
-				
+
 					if (hour < 9){
 						initial_hour = "0" + hour;
 						final_hour = "0" + (hour + 1);
@@ -242,16 +247,16 @@
 							final_hour = hour + 1
 						}
 					}
-				
+
 					if (minute == 0)
 						minute = "0" + minute;
-					
+
 					if (currentEvent != null){
 						$('#calendar').fullCalendar('removeEventSource', currentEvent);
 						$('#calendar').fullCalendar('refetchEvents');
 					}
-					
-				
+
+
 	 				initial_date = toDateString(date);
 					date.setHours(date.getHours() + 1);
 					final_date = toDateString(date);
@@ -262,8 +267,8 @@
 					$('#BookingFinalHourHour').val(final_hour);
 					$('#BookingFinalHourMin').val(minute);
 					$('#form').dialog({
-						width:500, 
-						position:'top', 
+						width:500,
+						position:'top',
 						close: function(event, ui) {
 							if (currentEvent != null){
 								$('#calendar').fullCalendar('removeEventSource', currentEvent);
@@ -292,7 +297,7 @@
 	<div id="calendar_container">
 		<div id="calendar" class="fc" style="margin: 3em 0pt; font-size: 13px;"></div>
 	</div>
-	
+
 	<div id="legend" style="">
 		<div id="legend_left">
 			<ul>
@@ -314,25 +319,25 @@
 				<li id="tutoria">Tutoría</li>
 				<li id="evaluacion">Evaluación</li>
 				<li id="otra_presencial">Otra presencial</li>
-			</ul>			
+			</ul>
 		</div>
 	</div>
-	
+
 
 	<div id="edit_form">
-		
+
 	</div>
-	
+
 	<div id="BookingDetails" style="display:none">
-		
+
 	</div>
-	
+
 	<div id="form_container" style="display:none;float:right;padding-top:6em">
 		<div id="form">
 			<?php echo $form->create('Booking', array('onsubmit' => 'return false;')); ?>
 			<fieldset>
-				<?php 
-					echo $form->input('reason', array('label' => 'Motivo', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); 
+				<?php
+					echo $form->input('reason', array('label' => 'Motivo', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
 					echo $form->input('required_equipment', array('type' => 'text_area', 'label' => 'Información', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
 				?>
 				<div class="input">
@@ -379,7 +384,7 @@
 			url: "<?php echo PATH ?>/events/get/" + $('#classrooms').val(),
 			dataType: "script"
 		});
-		
+
 		$.ajax({
 			cache: false,
 			type: "GET",
@@ -387,17 +392,17 @@
 			dataType: "script"
 		});
 	});
-	
+
 	$('#Frequency').change(function() {
 		if ($('#Frequency').val() != "")
 			$('#finish_date').show();
 		else
 			$('#finish_date').hide();
 	});
-	
-	
+
+
 	$(document).ready(function() {
 		$('#classrooms').val("");
 	});
-	
+
 </script>

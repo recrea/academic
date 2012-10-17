@@ -10,6 +10,5 @@ var events = [
 	echo implode($events_array, ",");
 ?>
 ];
-
 $('#calendar').fullCalendar('addEventSource', events);
 $('#calendar').fullCalendar('refetchEvents');
