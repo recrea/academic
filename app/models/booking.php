@@ -1,10 +1,12 @@
-<?php 
-
+<?php
 require_once('models/academic_model.php');
 
 class Booking extends AcademicModel {
 	var $name = "Booking";
-	
+
+	/**
+	 * belongsTo associations
+	 */
 	var $belongsTo = array('Classroom');
 	
 	var $validate = array(

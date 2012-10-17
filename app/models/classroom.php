@@ -3,6 +3,15 @@ require_once('models/academic_model.php');
 
 class Classroom extends AcademicModel {
 	var $name = 'Classroom';
+
+	/**
+	 * hasMany associations
+	 */
+	var $hasMany = array(
+		'Booking',
+		'Event',
+	);
+
 	var $validate = array(
 		'name' => array(
 			'notEmpty' => array(
