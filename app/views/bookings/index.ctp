@@ -196,7 +196,7 @@
 				else
 					url = "<?php echo PATH ?>/events/view/";
 				
-				id = event.id.match(/\d/);
+				id = event.id.match(/\d+/);
 				$.ajax({
 					cache: false,
 					type: "GET", 
