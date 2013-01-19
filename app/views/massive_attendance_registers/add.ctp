@@ -75,19 +75,30 @@
     	          ?>
     	          <input id="register_<?php echo $register['AttendanceRegister']['id']?>_teacher_name_2" value="<?php echo $teacher2 ?>" name="registers[<?php echo $register['AttendanceRegister']['id']?>][teacher_name_2]" class="teacher_name_2"/>
     	          <input type="hidden" id="register_<?php echo $register['AttendanceRegister']['id']?>_teacher_2_id" value="<?php echo $register['User2']['id'] ?>" name="registers[<?php echo $register['AttendanceRegister']['id']?>][teacher_2_id]" class="teacher_id"/>
-    	          
+
     	          <script type ="text/javascript">
-                	$(document).ready(function() {
-                		function formatItem(row){
+									$(document).ready(function() {
+										function formatItem(row){
                 			if (row[1] != null)
                 				return row[0];
                 			else
                 				return 'No existe ningún profesor con este nombre.';
                 		}
 
-                	  $("input#register_<?php echo $register['AttendanceRegister']['id'] ?>_teacher_name").autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: formatItem}).result(function(event, item){ $("input#register_<?php echo $register['AttendanceRegister']['id'] ?>_teacher_id").val(item[1]); });
-                	  
-                	  $("input#register_<?php echo $register['AttendanceRegister']['id'] ?>_teacher_name_2").autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: formatItem}).result(function(event, item){ $("input#register_<?php echo $register['AttendanceRegister']['id'] ?>_teacher_2_id").val(item[1]); });
+										$("input#register_<?php echo $register['AttendanceRegister']['id'] ?>_teacher_name_2").change(function(){
+											if ($(this).val().length == 0) {
+												$("input#register_<?php echo $register['AttendanceRegister']['id'] ?>_teacher_2_id").val('');
+											}
+										});
+
+
+										$("input#register_<?php echo $register['AttendanceRegister']['id'] ?>_teacher_name").autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {	formatItem: formatItem }).result(function(event, item){
+											$("input#register_<?php echo $register['AttendanceRegister']['id'] ?>_teacher_id").val(item[1]);
+										});
+
+										$("input#register_<?php echo $register['AttendanceRegister']['id'] ?>_teacher_name_2").autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", { formatItem: formatItem }).result(function(event, item){
+											$("input#register_<?php echo $register['AttendanceRegister']['id'] ?>_teacher_2_id").val(item[1]);
+										});
                 	});
                 </script>
     	        </td>
