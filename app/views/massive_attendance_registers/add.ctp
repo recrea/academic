@@ -50,7 +50,12 @@
     	        </td>
     	        <td><input id="registers_<?php echo $register['AttendanceRegister']['id']?>_initial_hour" name="registers[<?php echo $register['AttendanceRegister']['id']?>][initial_hour]" value="<?php echo $initial_date->format("H:i") ?>" class="initial_hour"/></td>
     	        <td>
-								<?php $duration = ($register['AttendanceRegister']['duration'] <= 0) ? $register['Event']['duration'] : $register['AttendanceRegister']['duration'] ?>
+								<?php
+									$duration = $register['Event']['duration'];
+									if ($register['AttendanceRegister']['duration'] != $register['Event']['duration'] && $register['AttendanceRegister']['duration'] >= 0) {
+										$duration = $register['AttendanceRegister']['duration'];
+									}
+								?>
 								<input id="register_<?php echo $register['AttendanceRegister']['id']?>_final_hour" value="<?php echo $duration ?>" name="registers[<?php echo $register['AttendanceRegister']['id']?>][duration]" class="duration"/>
 							</td>
     	        <td><?php echo $register['Subject']['name'] ?></td>
