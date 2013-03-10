@@ -44,21 +44,43 @@ class ClassroomsController extends AppController {
 	
 	function get_sign_file() {
 	  $classrooms = $this->Classroom->find('all', array('order' => "name ASC"));
-	    
+
 	  $classrooms_mapped = array();
 	  foreach($classrooms as $cl):
 	    $classrooms_mapped[$cl['Classroom']['id']] = $cl['Classroom']['name'];
 	  endforeach;
-	    
+
   	$this->set('classrooms', $classrooms_mapped);
 	}
 	
+	/**
+	 * Shows a form to print bookings on a given date
+	 *
+	 * @return void
+	 * @since 2013-03-10
+	 */
+	function get_bookings() { /* see print_bookings() */ }
+
+	/**
+	 * Prints a bookings sheet for a given date
+	 *
+	 * @return void
+	 * @since 2013-03-10
+	 */
+	function print_bookings() {
+    $date = $this->_parse_date($this->params['url']['date']);
+		$this->layout = false;
+
+		$this->set('date', date_create($date));
+		$this->set('events', $this->Classroom->Event->findAllByDate($date));
+	}
+
 	function print_sign_file() {
 	  $this->layout = 'sign_file';
     $date = $this->_parse_date($this->params['url']['date']);
-    
+
     $activities = $this->Classroom->query("SELECT Event.*, Activity.*, Subject.*, User.* FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id INNER JOIN users User ON User.id = Event.teacher_id WHERE DATE_FORMAT(Event.initial_hour, '%Y-%m-%d') = '{$date}' AND Event.classroom_id = {$this->params['url']['classroom']} ORDER BY Event.initial_hour");
-    
+
     $this->Classroom->id = $this->params['url']['classroom'];
     $this->set('activities', $activities);
     $this->set('classroom', $this->Classroom->read());

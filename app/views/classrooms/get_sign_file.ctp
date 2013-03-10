@@ -16,7 +16,7 @@
 </script>
 <!-- File: /app/views/classrooms/new.ctp -->
 <?php $html->addCrumb('Aulas', '/classrooms'); ?>
-<?php $html->addCrumb('Imprimit hoja de firmas', "/classrooms/get_sign_file"); ?>
+<?php $html->addCrumb('Imprimir hoja de firmas', "/classrooms/get_sign_file"); ?>
 
 
 <h1>Imprimir hoja de firmas</h1>

@@ -161,5 +161,46 @@ class Event extends AcademicModel {
 			'order' => array('Student.last_name', 'Student.first_name'),
 		));
 	}
+
+	/**
+	 * Finds all events on a given date
+	 *
+	 * @param date Date when events take place
+	 * @return Array of events
+	 * @since 2013-03-10
+	 */
+	function findAllByDate($date = '') {
+		if (empty($date)) {
+			return array();
+		}
+
+		$this->Behaviors->attach('Containable');
+
+		$this->unbindModel(array(
+			'belongsTo' => array('Activity')
+		));
+		$this->bindModel(array(
+			'hasOne' => array(
+				'Activity' => array(
+					'foreignKey' => false,
+					'conditions' => array('Activity.id = Event.activity_id')
+				),
+				'Subject' => array(
+					'foreignKey' => false,
+					'conditions' => array('Subject.id = Activity.subject_id')
+				)
+			)
+		));
+		return $this->find('all', array(
+			'fields' => array(
+				'Event.initial_hour', 'Event.final_hour',
+				'Teacher.first_name', 'Teacher.last_name',
+				'Classroom.name', 'Subject.name'
+			),
+			'contain' => array('Teacher', 'Classroom', 'Activity', 'Subject'),
+			'conditions' => array('Event.initial_hour >= ' => $date . ' 00:00:00', 'Event.final_hour <=' => $date . ' 23:59:59'),
+			'order' => array('Event.initial_hour'),
+		));
+	}
 }
 ?>
