@@ -55,22 +55,27 @@ class CoursesController extends AppController {
 		$newCourse["Course"]["final_date"] = date('Y-m-d', strtotime($latestFinalDate) + 31536000);
 
 		$this->Course->create();
-		if (!$this->Course->save($newCourse)) {
+		if ($this->Course->save($newCourse) === false) {
 			$this->Session->setFlash('El curso no se pudo copiar.');
 			$this->redirect($this->referer());
 		}
+		$new_course_id = $this->Course->id;
 
-		// Duplicates every subject
+		// Duplicate every subject
 		$savedSubjects = array();
 		$error = false;
 		foreach ($course['Subject'] as $subject) {
-			$subject['course_id'] = $this->Course->id;
+			$subject['course_id'] = $new_course_id;
 			$newSubject['Subject'] = $subject;
 			unset($newSubject['Subject']['id']);
+			unset($newSubject['Subject']['created']);
+			unset($newSubject['Subject']['modified']);
 
+			$new_subject_id = null;
 			$this->Course->Subject->create();
 			if ($this->Course->Subject->save($newSubject)) {
-				$savedSubjects[] = $this->Course->Subject->id;
+				$new_subject_id = $this->Course->Subject->id;
+				$savedSubjects[] = $new_subject_id;
 			} else {
 				$error = true;
 				break;
@@ -78,10 +83,14 @@ class CoursesController extends AppController {
 
 			// Duplicate all groups of this subject
 			foreach ($this->Course->Subject->Group->findAllBySubjectId($subject['id'], array('Group.*')) as $group) {
+				$group_id = $group['Group']['id'];
 				unset($group['Group']['id']);
-				$group['Group']['subject_id'] = $this->Course->Subject->id;
+				unset($group['Group']['created']);
+				unset($group['Group']['modified']);
+				$group['Group']['subject_id'] = $new_subject_id;
 
-				if (!$this->Course->Subject->Group->save($group)) {
+				$this->Course->Subject->Group->create();
+				if ($this->Course->Subject->Group->save($group) === false) {
 					$error = true;
 					break(2);
 				}
@@ -89,10 +98,14 @@ class CoursesController extends AppController {
 
 			// Duplicate all activities of this subject
 			foreach ($this->Course->Subject->Activity->findAllBySubjectId($subject['id'], array('Activity.*')) as $activity) {
+				$activity_id = $activity['Activity']['id'];
 				unset($activity['Activity']['id']);
-				$activity['Activity']['subject_id'] = $this->Course->Subject->id;
+				unset($activity['Activity']['created']);
+				unset($activity['Activity']['modified']);
+				$activity['Activity']['subject_id'] = $new_subject_id;
 
-				if (!$this->Course->Subject->Activity->save($activity)) {
+				$this->Course->Subject->Activity->create();
+				if ($this->Course->Subject->Activity->save($activity) === false) {
 					$error = true;
 					break(2);
 				}
