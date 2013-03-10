@@ -31,7 +31,7 @@ class SubjectsController extends AppController {
 		$subject = $this->Subject->read();
 
 		$activities = $this->Subject->Activity->query("
-			SELECT Activity.*, SUM(Event.duration) / `Group`.total AS duration, IFNULL(Registration.total / `Group`.total, 0) as students
+			SELECT Activity.*, SUM(Event.duration) / `Group`.total AS duration, IFNULL(Registration.total / `Group`.total, 0) as students, Registration.total AS activity_total
 			FROM activities Activity
 			LEFT JOIN events Event ON Event.activity_id = Activity.id
 			LEFT JOIN (SELECT `groups`.subject_id, `groups`.type, count(id) as total FROM `groups` where `groups`.name NOT LIKE '%no me presento%' GROUP BY `groups`.subject_id, `groups`.type) `Group` ON `Group`.subject_id = Activity.subject_id AND `Group`.type = Activity.type

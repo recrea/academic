@@ -80,6 +80,7 @@
 		        		<th>Duración</th>
 		        		<th>Horas/grupo</th>
 		        		<th>Estudiantes/grupo</th>
+								<th>Total estudiantes</th>
 		        	</tr>
 		        </thead>
 		        <tbody>
@@ -92,6 +93,7 @@
 		        			<td><?php echo $activity['Activity']['duration'] ?></td>
 		        			<td><?php echo round($activity[0]['duration'], 2) ?></td>
 		        			<td><?php echo round($activity[0]['students'], 2) ?></td>
+									<td><?php echo $activity['Registration']['activity_total'] ?></td>
 		        			<?php $total_duration += $activity['Activity']['duration'] ?>
 		        			<?php $total_programmed += $activity[0]['duration'] ?>
 		        		</tr>
