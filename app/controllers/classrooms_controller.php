@@ -73,6 +73,7 @@ class ClassroomsController extends AppController {
 
 		$this->set('date', date_create($date));
 		$this->set('events', $this->Classroom->Event->findAllByDate($date));
+		$this->set('bookings', $this->Classroom->Booking->findAllByDate($date));
 	}
 
 	function print_sign_file() {

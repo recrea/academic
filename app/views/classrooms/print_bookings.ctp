@@ -10,7 +10,9 @@
 <?php
 $continue = true;
 $first_page = true;
+$n = 0;
 $i = 0;
+$j = 0;
 $max_per_page = 16;
 ?>
 
@@ -47,7 +49,8 @@ $max_per_page = 16;
 			</tr>
 		</thead>
 		<tbody>
-			<?php for($j = 0;($i < count($events)) && ($j < $max_per_page);$i++, $j++): ?>
+			<?php $rows_in_this_page = 0 ?>
+			<?php for($rows_in_this_page; ($i < count($events)) && ($rows_in_this_page < $max_per_page); $n++, $i++, $rows_in_this_page++): ?>
 			<tr style="padding-top:0.1em;height:2.5em">
 				<td style="text-align:center; border:1px #000 solid">
 					<?php $initial_hour = date_create($events[$i]['Event']['initial_hour']); ?>
@@ -68,20 +71,33 @@ $max_per_page = 16;
 				</td>
 				<td style="padding-left:0.2em; border:1px #000 solid"></td>
 			</tr>
-			<?php endfor ?>				
+			<?php endfor ?>
 
-			<?php if ($i >= count($events)): ?>
+			<?php for($rows_in_this_page; $i >= count($events) && $j < count($bookings) && $rows_in_this_page < $max_per_page; $n++, $j++, $rows_in_this_page++): ?>
+			<tr style="padding-top:0.1em;height:2.5em">
+				<td style="text-align:center; border:1px #000 solid">
+					<?php $initial_hour = date_create($bookings[$j]['Booking']['initial_hour']); ?>
+					<?php echo "{$initial_hour->format('H:i')}" ?>
+				</td>
+				<td style="text-align:center; border:1px #000 solid">
+					<?php $final_hour = date_create($bookings[$j]['Booking']['final_hour']); ?>
+					<?php echo "{$final_hour->format('H:i')}" ?>
+				</td>
+				<td style="text-align:left; padding-left:0.2em; border:1px #000 solid">
+					<?php echo "{$bookings[$j]['Classroom']['name']}"?>
+				</td>
+				<td style="text-align:left; padding-left:0.2em; border:1px #000 solid"></td>
+				<td style="padding-left:0.2em; border:1px #000 solid">
+					<?php echo "{$bookings[$j]['Teacher']['first_name']} {$bookings[$j]['Teacher']['last_name']}"?>
+				</td>
+				<td style="padding-left:0.2em; border:1px #000 solid">
+					<?php echo "{$bookings[$j]['Booking']['reason']}"?>
+				</td>
+			</tr>
+			<?php endfor ?>
+
+			<?php if ($n >= (count($events) + count($bookings))): ?>
 				<?php $continue = false ?>
-				<?php for ($k=0; $k<3; $k++): ?>
-				<tr style="padding-top:0.1em;height:2.5em">
-					<td style="padding-left:0.2em; border:1px #000 solid"></td>
-					<td style="padding-left:0.2em; border:1px #000 solid"></td>
-					<td style="padding-left:0.2em; border:1px #000 solid"></td>
-					<td style="padding-left:0.2em; border:1px #000 solid"></td>
-					<td style="padding-left:0.2em; border:1px #000 solid"></td>
-					<td style="padding-left:0.2em; border:1px #000 solid"></td>
-				</tr>
-				<?php endfor ?>
 			<?php else: ?>
 				<?php $first_page = false; ?>
 			<?php endif ?>
@@ -92,7 +108,7 @@ $max_per_page = 16;
 <script type="text/javascript">
 $(document).ready(function() {
 	window.print();
-	});
+});
 </script>
 </body>
 </html>

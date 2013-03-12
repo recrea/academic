@@ -84,5 +84,39 @@ class Booking extends AcademicModel {
 		$date_components = split("-", $date->format('Y-m-d-H-i-s'));
 		return mktime($date_components[3],$date_components[4],$date_components[5], $date_components[1], $date_components[2], $date_components[0]);
 	}
+
+	/**
+	 * Finds all bookings on a given date
+	 *
+	 * @param date Date when bookings are active
+	 * @return Array of bookings
+	 * @since 2013-03-12
+	 */
+	function findAllByDate($date = '') {
+		if (empty($date)) {
+			return array();
+		}
+
+		$this->Behaviors->attach('Containable');
+		$this->bindModel(array(
+			'belongsTo' => array(
+				'Teacher' => array(
+					'className' => 'User',
+					'foreignKey' => false,
+					'conditions' => array("(Teacher.id = Booking.user_id)"),
+				),
+			),
+		));
+		return $this->find('all', array(
+			'fields' => array(
+				'Booking.initial_hour', 'Booking.final_hour', 'Booking.reason',
+				'Teacher.first_name', 'Teacher.last_name',
+				'Classroom.name',
+			),
+			'contain' => array('Teacher', 'Classroom'),
+			'conditions' => array('Booking.initial_hour >= ' => $date . ' 00:00:00', 'Booking.final_hour <=' => $date . ' 23:59:59'),
+			'order' => array('Booking.initial_hour'),
+		));
+	}
 }
 ?>

@@ -36,6 +36,9 @@ class Classroom extends AcademicModel {
 		)
 	);
 
-	var $hasMany = array('Event');
+	var $hasMany = array(
+		'Event',
+		'Booking',
+	);
 }
 ?>
