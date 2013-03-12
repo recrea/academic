@@ -3,7 +3,9 @@ require_once('models/academic_model.php');
 
 class Group extends AcademicModel {
 	var $name = "Group";
-	var $belongsTo = 'Subject';
+
+	var $belongsTo = array('Subject');
+
 	var $validate = array(
 		'name' => array(
 			'rule' => 'notEmpty',

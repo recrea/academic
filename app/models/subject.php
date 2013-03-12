@@ -6,11 +6,12 @@ class Subject extends AcademicModel {
 
 	var $hasMany = array(
 		'Group' => array(
-			'className' => 'Group',
-			'order' => array('Group.type ASC', 'Group.name ASC')
+			'order' => array('Group.type ASC', 'Group.name ASC'),
+			'dependent' => true,
 		),
 		'Activity' => array(
-			'order' => array('Activity.type ASC', 'Activity.name ASC')
+			'order' => array('Activity.type ASC', 'Activity.name ASC'),
+			'dependent' => true,
 		)
 	);
 

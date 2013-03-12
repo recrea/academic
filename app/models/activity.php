@@ -4,7 +4,7 @@ require_once('models/academic_model.php');
 class Activity extends AcademicModel {
 	var $name = "Activity";
 
-	var $belongsTo = 'Subject';
+	var $belongsTo = array('Subject');
 
 	var $hasMany = array('Registration');
 

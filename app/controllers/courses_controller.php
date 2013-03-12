@@ -128,7 +128,20 @@ class CoursesController extends AppController {
 
 
 	function delete($id) {
-		$this->Course->delete($id);
+		$this->Course->delete($id);  // Delete subjects implicitly
+
+		$currentSubjectsQuery = "SELECT DISTINCT `Subject`.id FROM subjects `Subject`";
+		$this->Course->query("DELETE FROM `groups` WHERE subject_id NOT IN ($currentSubjectsQuery)");
+		$this->Course->query("DELETE FROM `activities` WHERE subject_id NOT IN ($currentSubjectsQuery)");
+		$this->Course->query("DELETE FROM `subjects_users` WHERE subject_id NOT IN ($currentSubjectsQuery)");
+
+		$currentActivitiesQuery = "SELECT DISTINCT `Activity`.id FROM activities `Activity`";
+		$this->Course->query("DELETE FROM `attendance_registers` WHERE activity_id NOT IN ($currentActivitiesQuery)");
+		$this->Course->query("DELETE FROM `events` WHERE activity_id NOT IN ($currentActivitiesQuery)");
+		$this->Course->query("DELETE FROM `registrations` WHERE activity_id NOT IN ($currentActivitiesQuery)");
+
+		$this->Course->query("DELETE FROM `users_attendance_register` WHERE attendance_register_id NOT IN (SELECT DISTINCT `AttendanceRegister`.id FROM attendance_registers `AttendanceRegister`)");
+
 		$this->Session->setFlash('El curso ha sido eliminado correctamente');
 		$this->redirect(array('action' => 'index'));
 	}
