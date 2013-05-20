@@ -4,13 +4,13 @@ class MassiveAttendanceRegistersController extends AppController {
 
 	var $helpers = array('Ajax');
 
-	function add($course_id = null){
+	function add($course_id = null) {
 		if ($course_id == null) {
 			$course_id = $this->params['form']['course_id'];
 		}
 		$course = $this->MassiveAttendanceRegister->Subject->Course->findById($course_id);
-		$classrooms = $this->MassiveAttendanceRegister->AttendanceRegister->Event->Classroom->find('all', array('order' => 'name'));
 
+		$classrooms = $this->MassiveAttendanceRegister->AttendanceRegister->Event->Classroom->find('all', array('order' => 'name', 'recursive' => 0));
 		$classrooms_mapped = array();
 		foreach($classrooms as $cl) {
 			$classrooms_mapped[$cl['Classroom']['id']] = $cl['Classroom']['name'];
