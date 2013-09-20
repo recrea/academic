@@ -324,7 +324,10 @@ class AttendanceRegistersController extends AppController {
 		}
 
 		$event = $this->AttendanceRegister->Event->findById($event_id);
+		$shouldUpdateAttendanceRegisters = true;
 		if ($event['AttendanceRegister']['id'] == null) {
+			$shouldUpdateAttendanceRegisters = false;
+
 			// Preload a list of students attending to this activity
 			$students = $this->AttendanceRegister->Student->query("
 				SELECT Student.id
@@ -371,6 +374,63 @@ class AttendanceRegistersController extends AppController {
 			ORDER BY Student.last_name, Student.first_name
 		");
 
+		$studentsRegistered = $this->AttendanceRegister->Student->query("
+			SELECT Student.*
+			FROM users Student
+			INNER JOIN registrations Registration ON Student.id = Registration.student_id
+			WHERE Registration.activity_id = {$event['Event']['activity_id']}
+			AND Registration.group_id = {$event['Event']['group_id']}
+			ORDER BY Student.last_name, Student.first_name
+		");
+
+		/**
+		 * Update users preloaded in attendance register if activity hasn't take place.
+		 *
+		 * This has been added because students can register and unregister in activities
+		 * at any time.
+		 *
+		 * @author Eliezer Talon <elitalon@gmail.com>
+		 * @since 2013-09-20
+		 */
+		if ($shouldUpdateAttendanceRegisters) {
+			$currentTimestamp = strtotime(date('Y-m-d H:i:s'));
+			$activityTimestamp = strtotime($event['Event']['initial_hour']);
+
+			if ($currentTimestamp < $activityTimestamp) {
+				// Delete from AR those who aren't registered yet
+				$studentsPreloadedToKeep = array();
+				foreach ($students as $student) {
+					$results = Set::extract(sprintf('/Student[id=%d]', $student['Student']['id']), $studentsRegistered);
+					$isStudentRegistered = count($results);
+
+					if ($isStudentRegistered) {
+						$studentsPreloadedToKeep[] = $student;
+					}
+				}
+				$students = $studentsPreloadedToKeep;
+
+				// Add to preloaded attendance registers the newly registered students
+				foreach ($studentsRegistered as $studentRegistered) {
+					$results = Set::extract(sprintf('/Student[id=%d]', $studentRegistered['Student']['id']), $students);
+					$isStudentPreloaded = count($results);
+
+					if ($isStudentPreloaded) {
+						continue;
+					}
+					if (!is_array($students)) {
+						$students = array();
+					}
+					array_push($students, $studentRegistered);
+				}
+
+				// Update database
+				$attendanceRegister = $this->AttendanceRegister->findById($event['AttendanceRegister']['id'], array('AttendanceRegister.*'));
+				$attendanceRegister['Student'] = array('Student' => array_unique(Set::classicExtract($students, '{n}.Student.id')));
+				$this->AttendanceRegister->id = $event['AttendanceRegister']['id'];
+				$saved = $this->AttendanceRegister->saveAll($attendanceRegister);
+			}
+		}
+
 		/**
 		 * Temporary fix to reload students from original registrations.
 		 *
@@ -383,14 +443,7 @@ class AttendanceRegistersController extends AppController {
 		 * @since 2012-06-14
 		 */
 		if (empty($students)) {
-			$students = $this->AttendanceRegister->Student->query("
-				SELECT Student.*
-				FROM users Student
-				INNER JOIN registrations Registration ON Student.id = Registration.student_id
-				WHERE Registration.activity_id = {$event['Event']['activity_id']}
-				AND Registration.group_id = {$event['Event']['group_id']}
-				ORDER BY Student.last_name, Student.first_name
-			");
+			$students = $studentsRegistered;
 		}
 
 		$this->set('event', $event);
